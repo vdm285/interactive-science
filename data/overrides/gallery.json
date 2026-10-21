@@ -1,0 +1,8 @@
+{
+  "_doc": "Curation for tools/build-gallery.mjs (npm run gallery). Keys are atomic numbers as strings. exclude: Commons file titles (File:...) to drop even though an article uses them. include: extra Commons files to add; their license is still checked and they are dropped if not free. first: the file that should lead the gallery. Everything else comes from the Spanish and English Wikipedia articles, Spanish article order first, then English additions. Re-run npm run gallery after editing.",
+  "6": {
+    "exclude": ["File:Centrilobular emphysema 865 lores.jpg"],
+    "include": [],
+    "first": null
+  }
+}
