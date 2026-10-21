@@ -8,8 +8,9 @@ Live: https://vdm285.github.io/interactive-science/
 
 ## What you can do
 
-- **Lenses on the table**: photographs of every element Commons has; families; state at any temperature (drag it: mercury and bromine stay liquid at 25 °C, iron melts at 1,538 °C); which elements were known in any year since 1650; every atom's visible emission spectrum; atomic size to scale; heatmaps of electronegativity, density, melting and boiling points, ionization energy, mass, crustal abundance and discovery year.
-- **An element as a deck**: a photograph with its credit, the spectrum drawn from NIST lines (hover for the wavelength), a Bohr drawing with the configuration and orbital boxes, every known isotope with half-lives and abundances, the discovery with its people and a timeline of all 118, abundance in five media, the Wikipedia articles' images, and every number with its source.
+- **Three layers, and the table never leaves.** Tap an element: the table shrinks to a band along the top and the element's world opens beneath it (tap another tile or use the arrow keys to wander). Tap the highlighted element again, its photo, or one of the doors: the tile zooms to fill the screen and swings open onto the deep dive. Escape surfaces.
+- **Lenses on the table** (one button, bottom-right): photographs of every element Commons has; families; state at any temperature (drag it: mercury and bromine stay liquid at 25 °C, iron melts at 1,538 °C); which elements were known in any year since 1650; every atom's visible emission spectrum; atomic size to scale; heatmaps of electronegativity, density, melting and boiling points, ionization energy, mass, crustal abundance and discovery year.
+- **An element as a deck**: a photograph with its credit, the spectrum drawn from NIST lines (hover for the wavelength), a Bohr drawing with the configuration and orbital boxes, every known isotope with half-lives and abundances, the discovery with its people and a timeline of all 118, abundance in five media, the Wikipedia articles' images, the Periodic Videos episode (tap to play), and every number with its source.
 - Keys: `/` search, arrows, Esc.
 
 ## Run it

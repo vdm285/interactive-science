@@ -83,6 +83,7 @@ export function settingsView(s) {
         ${s.isotopes ? html`<li><a href=${s.isotopes.source.url} target="_blank" rel="noreferrer">${s.isotopes.source.name}</a> <span class="dim">· IAEA terms of use, acknowledgment</span></li>` : nothing}
         ${s.history ? html`<li><a href=${s.history.source.url} target="_blank" rel="noreferrer">${s.history.source.name}</a> <span class="dim">· ${s.history.source.license}</span></li>` : nothing}
         ${s.abundance ? html`<li><a href=${s.abundance.source.page} target="_blank" rel="noreferrer">Wikipedia, Abundances of the elements (data page)</a> <span class="dim">· ${s.abundance.source.license}</span></li>` : nothing}
+        ${s.videos ? html`<li><a href=${s.videos.source.site} target="_blank" rel="noreferrer">${s.videos.source.name}</a> <span class="dim">· ${s.lang === 'es' ? 'videos incrustados desde YouTube, propiedad de su canal' : 'videos embedded from YouTube, owned by their channel'}</span></li>` : nothing}
         <li><a href="https://es.wikipedia.org/" target="_blank" rel="noreferrer">Wikipedia</a> <span class="dim">· CC BY-SA 4.0</span></li>
         <li><a href="https://commons.wikimedia.org/" target="_blank" rel="noreferrer">Wikimedia Commons</a> <span class="dim">· ${s.lang === 'es' ? 'licencia por archivo, indicada junto a cada imagen' : 'per-file license, shown next to each image'}</span></li>
       </ul>
