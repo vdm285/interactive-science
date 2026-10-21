@@ -192,7 +192,8 @@ function junk(kind, text) { (junkLog[kind] ||= []).push(text); }
 
 // Rank candidates, fetch details for the top of the list, attach photos, keep MAX_ITEMS.
 async function finish(z, ranked, kind) {
-  const top = ranked.slice(0, DETAIL_POOL);
+  // Curated includes (via 'override') always reach the detail stage and the final list.
+  const top = ranked.filter((c, i) => i < DETAIL_POOL || c.via === 'override');
   const det = await details(top.map((c) => c.qid));
   const items = [];
   for (const c of top) {
@@ -213,7 +214,10 @@ async function finish(z, ranked, kind) {
     entry.photo = photos[it.qid];
     entry.wiki = it.wiki;
     kept.push(entry);
-    if (kept.length >= MAX_ITEMS) break;
+  }
+  while (kept.length > MAX_ITEMS) {
+    const victim = [...kept].reverse().find((k) => k.via !== 'override') || kept[kept.length - 1];
+    kept.splice(kept.indexOf(victim), 1);
   }
   return kept;
 }
@@ -340,7 +344,9 @@ async function buildObjects(z, mineralQids) {
   // Generic things (classes) first, by sitelinks; then at most MAX_INSTANCES famous instances.
   ranked.sort((a, b) => (b.isClass - a.isClass) || (b.n - a.n));
   const instances = ranked.filter((r) => !r.isClass).slice(0, MAX_INSTANCES);
-  return finish(z, [...ranked.filter((r) => r.isClass).slice(0, DETAIL_POOL - MAX_INSTANCES), ...instances], 'objects');
+  const classes = ranked.filter((r) => r.isClass);
+  const classTop = classes.filter((r, i) => i < DETAIL_POOL - MAX_INSTANCES || r.via === 'override');
+  return finish(z, [...classTop, ...instances], 'objects');
 }
 
 // --- run -------------------------------------------------------------------------------------

@@ -1,35 +1,451 @@
 {
-  "_doc": "Curation for tools/build-things.mjs (node tools/build-things.mjs). Keys are atomic numbers as strings; each has minerals and objects, each with include and exclude lists of Wikidata QIDs. include adds an item the automatic routes miss; it still needs a P18 photo with an accepted Commons license and an es or en label, and it skips the sitelink and type filters. exclude drops an item even if the data says it belongs. Say why in a _note next to the change. Re-run the script after editing.",
+  "_doc": "Curation for tools/build-things.mjs (node tools/build-things.mjs). Keys are atomic numbers as strings; each has minerals and objects, each with include and exclude lists of Wikidata QIDs. include adds an item the automatic routes miss; it still needs a P18 photo with an accepted Commons license and an es or en label, and it skips the sitelink and type filters. exclude drops an item even if the data says it belongs. Say why in a _note next to the change. Re-run the script after editing. Every QID below was resolved with wbsearchentities + wbgetentities (label, description, P18 present) on 2026-10-21.",
+  "2": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q643435",
+        "Q133585"
+      ],
+      "exclude": [
+        "Q189567"
+      ],
+      "_note": "Q643435 toy balloon and Q133585 airship: the things everyone fills with helium; Wikidata does not link them to the element. Q189567 food additive is the P366 'use' E939; a food-additive class is not a thing a reader recognizes as made of helium."
+    }
+  },
   "6": {
     "minerals": {
-      "include": ["Q24489"],
+      "include": [
+        "Q24489"
+      ],
       "exclude": [],
       "_note": "Q24489 coal: a rock, not a mineral, so it has no mineral type and no formula in Wikidata, yet it is the carbon source everyone knows."
     },
-    "objects": { "include": [], "exclude": [] }
+    "objects": {
+      "include": [
+        "Q14674",
+        "Q177463",
+        "Q126991311"
+      ],
+      "exclude": [
+        "Q193784",
+        "Q688605"
+      ],
+      "_note": "Q14674 pencil (graphite), Q177463 charcoal and Q126991311 diamond ring (0 sitelinks, has a photo): the carbon objects everyone knows, not linked to carbon by P186. Q193784 motor oil reaches the list through 'has part: carbon'; a petroleum product is not something a reader sees as made of carbon. Q688605 Flyer I is tagged made from cast iron (its engine); the Wright Flyer is wood and fabric."
+    }
+  },
+  "7": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [],
+      "exclude": [
+        "Q189567"
+      ],
+      "_note": "Q189567 food additive (P366 'use', E941): a class of additives is not a thing made of nitrogen."
+    }
+  },
+  "8": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [],
+      "exclude": [
+        "Q189567"
+      ],
+      "_note": "Q189567 food additive (P366 'use', E948): a class of additives is not a thing made of oxygen."
+    }
+  },
+  "9": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q35855"
+      ],
+      "exclude": [],
+      "_note": "Q35855 toothpaste: fluoride toothpaste is the fluorine product everyone knows. No Wikidata item exists for a Teflon pan; PTFE itself is a compound and the generic frying pan photo is stainless steel, so neither was added."
+    }
+  },
+  "10": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q6006"
+      ],
+      "exclude": [],
+      "_note": "Q6006 neon sign: not linked to neon in Wikidata by any property the script follows. Q12177156 neon lighting shares the same photo, so only the sign is added."
+    }
+  },
+  "11": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q743231"
+      ],
+      "exclude": [],
+      "_note": "Q743231 sodium-vapor lamp, the orange street light. Table salt (Q11254) is already the first sodium mineral, so it is not repeated as an object."
+    }
+  },
+  "13": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q447349",
+        "Q1121690"
+      ],
+      "exclude": [
+        "Q189720",
+        "Q688605",
+        "Q14850354",
+        "Q8791",
+        "Q3278675"
+      ],
+      "_note": "Q447349 aluminium foil and Q1121690 beverage can: the everyday aluminium objects, outranked by aircraft and phones in the P186 route. Q189720 dye is a P366 'use' (aluminium salts as mordant); a dye is not made of aluminium. Q688605 Flyer I is tagged made from aluminium (its engine crankcase); the Wright Flyer is wood and fabric. The can (32 sitelinks) still sits below the 20-item detail pool of aircraft and phones; only a script change (overrides exempt from the pool cut) would surface it."
+    },
+    "_notes": "Variety: one airliner (Airbus A380) and one phone (iPhone 5) are enough; the iPhone 5S, Boeing 747-8 and Airbus A321 duplicates are excluded so foil, cans and bats come forward."
+  },
+  "14": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q11469",
+        "Q58803",
+        "Q34679"
+      ],
+      "exclude": [],
+      "_note": "Q11469 glass, Q58803 solar cell (its photo is a silicon cell) and Q34679 sand: silicon as everyone meets it; Wikidata links none of them to the element."
+    }
   },
   "16": {
-    "minerals": { "include": [], "exclude": [] },
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
     "objects": {
-      "include": ["Q12861"],
+      "include": [
+        "Q12861",
+        "Q37507",
+        "Q169545"
+      ],
       "exclude": [],
-      "_note": "Q12861 gunpowder: reached only through 'has part: sulfur', a route the script limits to non-substances because for carbon it returns every organic compound."
+      "_note": "Q12861 gunpowder: reached only through 'has part: sulfur', a route the script limits to non-substances because for carbon it returns every organic compound. Q37507 match (the striking head) and Q169545 tire (vulcanized rubber) added; Q13211745 vulcanized rubber itself has no P18 photo. Sulfuric acid is a compound and was not added."
+    }
+  },
+  "17": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q11587",
+        "Q11254"
+      ],
+      "exclude": [],
+      "_note": "Q11587 bleach (hypochlorite) and Q11254 table salt: the chlorine products everyone knows. Table salt is a sodium mineral in the formula route but does not appear under chlorine, so it is added here. A swimming pool is a structure, not a chlorine object, and was not added."
+    }
+  },
+  "18": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [],
+      "exclude": [
+        "Q189567"
+      ],
+      "_note": "Q189567 food additive (P366 'use', E938): a class of additives is not a thing made of argon. TIG welding (Q1627310) is a process, not an object, so it was not added; the incandescent bulb already arrives through P186."
+    }
+  },
+  "19": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q10564271"
+      ],
+      "exclude": [],
+      "_note": "Q10564271 potash: the potassium salts sold as fertilizer, a mixture rather than a compound, with a photo."
+    }
+  },
+  "20": {
+    "minerals": {
+      "include": [
+        "Q183670",
+        "Q23757"
+      ],
+      "exclude": [],
+      "_note": "Q183670 chalk and Q23757 limestone are rocks, not minerals, so they have no mineral type or formula in Wikidata, yet they are the calcium rocks everyone knows (like coal for carbon)."
+    },
+    "objects": {
+      "include": [
+        "Q147690"
+      ],
+      "exclude": [],
+      "_note": "Q147690 chalk stick, the blackboard chalk (calcium carbonate or sulfate)."
+    }
+  },
+  "22": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q143680"
+      ],
+      "exclude": [],
+      "_note": "Q143680 dental implant, the titanium implant everyone has heard of. Q1054671 golf club was not added: its P18 photo shows wooden clubs. Q10532170 hip prosthesis has no photo."
+    }
+  },
+  "24": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q1506986"
+      ],
+      "exclude": [],
+      "_note": "Q1506986 chrome plating: a technique in Wikidata, but its photo is chromed motorcycle parts, which is what people picture as chromium. Q172587 stainless steel has no P18 photo."
+    }
+  },
+  "26": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q11427",
+        "Q192130",
+        "Q37077"
+      ],
+      "exclude": [],
+      "_note": "Q11427 steel is not linked to iron by P527 or P186 in Wikidata; Q192130 horseshoe and Q37077 nail are the iron objects everyone knows."
+    }
+  },
+  "27": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q56297854"
+      ],
+      "exclude": [],
+      "_note": "Q56297854 cobalt glass, the deep blue glass that gives the element its everyday face."
+    }
+  },
+  "28": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q238498"
+      ],
+      "exclude": [],
+      "_note": "Q238498 nickel, the United States five-cent coin, the object that carries the element's name."
     }
   },
   "29": {
-    "minerals": { "include": [], "exclude": [] },
-    "objects": {
+    "minerals": {
       "include": [],
-      "exclude": ["Q244475"],
-      "_note": "Q244475 tap dance is 'made from material: brass' in Wikidata (the shoe taps). A dance is not an object."
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q2811078"
+      ],
+      "exclude": [
+        "Q244475"
+      ],
+      "_note": "Q2811078 copper conductor (copper wire) is a P366 use of copper with 13 sitelinks, below the twenty best-known copper items; the override makes it compete. Q244475 tap dance is 'made from material: brass' in Wikidata (the shoe taps). A dance is not an object. Q154038 cookware was not added: its photo is an electric griddle."
+    }
+  },
+  "30": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q28765"
+      ],
+      "exclude": [],
+      "_note": "Q28765 zinc-carbon battery, the ordinary dry cell with a zinc case. Galvanization (Q690418) and galvanized steel (Q5901135) have no P18 photo; brass instruments already arrive through brass."
+    }
+  },
+  "31": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q675176"
+      ],
+      "exclude": [],
+      "_note": "Q675176 Galinstan, the gallium alloy used in thermometers; linked to bismuth as an alloy in Wikidata but not to gallium. No gallium-spoon item exists."
+    }
+  },
+  "47": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q1683099"
+      ],
+      "exclude": [
+        "Q189567"
+      ],
+      "_note": "Q1683099 household silver (silverware). Q189567 food additive (P366 'use', E174): a class of additives is not a thing made of silver. Silver coin and cutlery already arrive through the automatic routes."
+    }
+  },
+  "53": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q867226"
+      ],
+      "exclude": [
+        "Q188990"
+      ],
+      "_note": "Q867226 tincture of iodine, the brown antiseptic bottle. Q188990 Gram stain reaches the list through P2283 'uses'; a laboratory procedure is not an object."
+    }
+  },
+  "60": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q908880"
+      ],
+      "exclude": [],
+      "_note": "Q908880 neodymium magnet: the 'has part' route finds it but the automatic filters dropped it from the neodymium list; it is the one neodymium object everyone knows."
+    }
+  },
+  "74": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q47616",
+        "Q423265"
+      ],
+      "exclude": [],
+      "_note": "Q47616 incandescent light bulb (the tungsten filament) is linked to argon in Wikidata but not to tungsten. Q423265 tungsten carbide is typed as a compound, but it is the hard material of drill bits and rings that people know by name, and its photo is the material. Darts (Q131471) is the game with an SVG dartboard, not an object."
+    }
+  },
+  "78": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q653807"
+      ],
+      "exclude": [],
+      "_note": "Q653807 catalytic converter, the platinum object in every petrol car."
+    }
+  },
+  "79": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q842096",
+        "Q945025"
+      ],
+      "exclude": [],
+      "_note": "Q842096 wedding ring and Q945025 gold bar: the two gold objects everyone pictures, outranked by coins and pens in the P186 route."
     }
   },
   "80": {
-    "minerals": { "include": [], "exclude": [] },
-    "objects": {
+    "minerals": {
       "include": [],
-      "exclude": ["Q116854575"],
-      "_note": "Q116854575 legacy pollution 'has part: mercury'. A pollution type is not an object."
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q1428655",
+        "Q182925",
+        "Q370387"
+      ],
+      "exclude": [
+        "Q116854575"
+      ],
+      "_note": "Q1428655 mercury-in-glass thermometer, Q182925 fluorescent lamp and Q370387 mercury-vapor lamp: the mercury objects everyone knows, none linked to the element in Wikidata. Q116854575 legacy pollution 'has part: mercury'. A pollution type is not an object."
+    }
+  },
+  "82": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q12826066",
+        "Q2597459"
+      ],
+      "exclude": [],
+      "_note": "Q12826066 plumb line (the lead plumb bob, 'plomada' from plomo) and Q2597459 fishing sinker: everyday lead weights. No Wikidata item exists for a lead water pipe; the lead-acid battery already arrives through 'has part'."
+    }
+  },
+  "92": {
+    "minerals": {
+      "include": [],
+      "exclude": []
+    },
+    "objects": {
+      "include": [
+        "Q221163"
+      ],
+      "exclude": [
+        "Q41177"
+      ],
+      "_note": "Q221163 uranium glass, the green glass that glows under UV. Q41177 granite is 'made from material: uranium' in Wikidata (a trace constituent); a reader would not call granite a uranium object."
     }
   }
 }
