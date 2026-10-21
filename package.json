@@ -17,7 +17,8 @@
     "history": "node tools/build-history.mjs",
     "abundance": "node tools/build-abundance.mjs",
     "gallery": "node tools/build-gallery.mjs",
-    "data:all": "npm run data && npm run wiki && npm run photos && npm run spectra && npm run isotopes && npm run history && npm run abundance && npm run gallery"
+    "data:all": "npm run data && npm run wiki && npm run photos && npm run spectra && npm run isotopes && npm run history && npm run abundance && npm run gallery && npm run videos",
+    "videos": "node tools/build-videos.mjs"
   },
   "dependencies": {
     "@fontsource/fraunces": "^5.2.9",

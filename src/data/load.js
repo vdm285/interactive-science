@@ -28,6 +28,7 @@ export function loadExtras() {
   json('isotopes.json').then((isotopes) => set({ isotopes }));
   json('history.json').then((history) => set({ history }));
   json('abundance.json').then((abundance) => set({ abundance }));
+  json('videos.json').then((videos) => set({ videos }));
   json('wiki/index.json').then((wikiIndex) => set({ wikiIndex }));
   json('gallery/index.json').then((galleryIndex) => set({ galleryIndex }));
 }
@@ -58,4 +59,5 @@ export const spectrumOf = (z) => state.spectra?.elements?.[String(z)] || null;
 export const isotopesOf = (z) => state.isotopes?.elements?.[String(z)] || null;
 export const historyOf = (z) => state.history?.elements?.[String(z)] || null;
 export const abundanceOf = (z) => state.abundance?.elements?.[String(z)] || null;
+export const videoOf = (z) => state.videos?.elements?.[String(z)] || null;
 export const tileUrl = (z) => `${base}img/tiles/${z}.webp`;

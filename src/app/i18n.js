@@ -10,6 +10,9 @@ export const COPY = {
     settings: 'Ajustes',
     close: 'Cerrar',
     back: 'Volver a la tabla',
+    enter: 'Entrar',
+    diveHint: 'Toca otra vez el elemento, su foto o una de las puertas para entrar a su mundo. Las flechas recorren la tabla.',
+    lensesTitle: 'Lentes',
     lenses: { fotos: 'Fotos', familias: 'Familias', estado: 'Estado', historia: 'Historia', luz: 'Luz', tamano: 'Tamaño', datos: 'Datos' },
     lensHelp: {
       fotos: 'Cada casilla es una fotografía del elemento. Pasa el cursor para ver el nombre.',
@@ -39,7 +42,8 @@ export const COPY = {
       year: ['Año de descubrimiento', ''],
     },
     noValue: 'sin dato',
-    panels: { materia: 'Materia', luz: 'Luz', atomo: 'Átomo', nucleo: 'Núcleo', historia: 'Historia', mundo: 'Mundo', imagenes: 'Imágenes', datos: 'Datos' },
+    panels: { materia: 'Materia', luz: 'Luz', atomo: 'Átomo', nucleo: 'Núcleo', historia: 'Historia', mundo: 'Mundo', imagenes: 'Imágenes', video: 'Video', datos: 'Datos' },
+    videoTitle: 'El episodio de Periodic Videos', videoPlay: 'Ver el video', videoNote: 'Se reproduce desde YouTube (reproductor sin cookies) al tocar; el video pertenece a su canal, no se descarga ni se aloja aquí.', videoBy: 'Universidad de Nottingham y Brady Haran, en inglés',
     // Materia
     protons: 'protones', mass: 'masa', read: 'Leer', readLess: 'Cerrar texto', wiki: 'Wikipedia en español', wikiEn: 'Wikipedia en inglés', ccBySa: 'CC BY-SA 4.0',
     noPhoto: 'Wikimedia Commons no tiene una fotografía de este elemento.',
@@ -96,6 +100,9 @@ export const COPY = {
     settings: 'Settings',
     close: 'Close',
     back: 'Back to the table',
+    enter: 'Enter',
+    diveHint: 'Tap the element again, its photo or one of the doors to enter its world. Arrow keys walk the table.',
+    lensesTitle: 'Lenses',
     lenses: { fotos: 'Photos', familias: 'Families', estado: 'State', historia: 'History', luz: 'Light', tamano: 'Size', datos: 'Data' },
     lensHelp: {
       fotos: 'Each tile is a photograph of the element. Hover for the name.',
@@ -125,7 +132,8 @@ export const COPY = {
       year: ['Year of discovery', ''],
     },
     noValue: 'no data',
-    panels: { materia: 'Matter', luz: 'Light', atomo: 'Atom', nucleo: 'Nucleus', historia: 'History', mundo: 'World', imagenes: 'Images', datos: 'Data' },
+    panels: { materia: 'Matter', luz: 'Light', atomo: 'Atom', nucleo: 'Nucleus', historia: 'History', mundo: 'World', imagenes: 'Images', video: 'Video', datos: 'Data' },
+    videoTitle: 'The Periodic Videos episode', videoPlay: 'Play the video', videoNote: 'Plays from YouTube (privacy-enhanced player) when tapped; the video belongs to its channel and is neither downloaded nor hosted here.', videoBy: 'University of Nottingham and Brady Haran',
     protons: 'protons', mass: 'mass', read: 'Read', readLess: 'Close text', wiki: 'Wikipedia in English', wikiEn: 'Wikipedia in Spanish', ccBySa: 'CC BY-SA 4.0',
     noPhoto: 'Wikimedia Commons has no photograph of this element.',
     noPhotoHeavy: 'Only a few atoms have ever been made in laboratories; there is no sample to photograph.',
@@ -166,5 +174,5 @@ export const COPY = {
   },
 };
 
-export const PANELS = ['materia', 'luz', 'atomo', 'nucleo', 'historia', 'mundo', 'imagenes', 'datos'];
+export const PANELS = ['materia', 'luz', 'atomo', 'nucleo', 'historia', 'mundo', 'imagenes', 'video', 'datos'];
 export const LENSES = ['fotos', 'familias', 'estado', 'historia', 'luz', 'tamano', 'datos'];

@@ -1,0 +1,3 @@
+{
+  "_doc": "Curation for tools/build-videos.mjs. Keys are atomic numbers as strings. A value of null removes the video for that element. An object forces a video: 'id' is the 11-character YouTube video id (it must still be public, checked with YouTube's oEmbed; a 'note' says why). The forced id goes first and any ids the site page embeds follow in 'more'. Keys starting with an underscore are ignored."
+}

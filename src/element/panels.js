@@ -8,7 +8,7 @@ import { state, set } from '../app/store.js';
 import { openElement } from '../app/router.js';
 import { COPY } from '../app/i18n.js';
 import { fmt, halfLifeText, parseConfig, orbitalBoxes, rankOf, shellNote, phaseAt, cToKelvin } from '../logic.js';
-import { photoOf, spectrumOf, isotopesOf, historyOf, abundanceOf } from '../data/load.js';
+import { photoOf, spectrumOf, isotopesOf, historyOf, abundanceOf, videoOf } from '../data/load.js';
 import { atomSvg } from '../draw/atom.js';
 import { FAMILY_COLOR, discoveryYear } from '../table/lenses.js';
 
@@ -278,6 +278,27 @@ export function lightbox(e, s) {
     <button type="button" class="nav next" aria-label=${c.next} @click=${() => step(1)}>›</button>
     <button type="button" class="x" aria-label=${c.close} @click=${() => set({ lightbox: null })}>×</button>
   </div>`;
+}
+
+// ───────────────────────────── Video (Periodic Videos, embedded on tap)
+export function video(e, s) {
+  const c = t();
+  const v = videoOf(e.z);
+  if (!v) return html`<section class="panel video"><p class="empty">${c.noValue}</p></section>`;
+  const playing = s.videoPlaying === v.id;
+  return html`<section class="panel video">
+    <h2>${c.videoTitle}</h2>
+    <div class="player">
+      ${playing
+        ? html`<iframe src=${`https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0`} title=${v.title} allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`
+        : html`<button type="button" class="poster" @click=${() => set({ videoPlaying: v.id })} aria-label=${c.videoPlay}>
+            <img src=${v.thumb} alt="" loading="lazy">
+            <span class="play">▶</span>
+          </button>`}
+    </div>
+    <p class="meta"><strong>${v.title}</strong> · <a href=${`https://www.youtube.com/watch?v=${v.id}`} target="_blank" rel="noreferrer">${v.channel}</a> <span class="dim">· ${c.videoBy}</span></p>
+    <p class="src">${c.videoNote} <a href=${s.videos?.source?.site} target="_blank" rel="noreferrer">periodicvideos.com</a></p>
+  </section>`;
 }
 
 // ───────────────────────────── Datos

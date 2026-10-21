@@ -8,6 +8,13 @@ A periodic table on a phone or a wall should beat "just Google it" in one way: i
 
 The second thing it should do is give you something to do after the first tap. The lenses do that on the table (drag a temperature and watch mercury and bromine stay liquid while everything else freezes; drag the year and watch Mendeleev's 1869 table appear); the deck does it inside an element.
 
+## Victor's direction after the first checkpoint (2026-10-21)
+
+- **The table never disappears.** It is the universe the reader works in, like the globe in Giramundo; it must stay reachable without intermediate clicks. So the app has three layers: the full table (wide exploration); the **peek**, where the table shrinks to a band along the top and the chosen element's world opens beneath it, so tapping from element to element is instant; and the **deep dive**, entered by tapping the highlighted element again (or its photo, or one of the doors), with a smooth zoom into the tile that then swings open like a door onto the deck of full-screen panels. Inside the deck the medallion mini-table is the universe kept in the padding.
+- **Wide and deep.** A short attention span should be positively overwhelmed by variety (lenses, photos, doors) and still be able to go tall on one element when something catches it. Modularity and optionality throughout.
+- **Lenses fold into one button** (bottom-right), not a rail. Name: **Materia**. Next round: media depth (curated photographs, minerals and ores, everyday objects, the Periodic Videos episode per element).
+- Desktop and laptop first; phones later.
+
 ## Taste rules applied here
 
 - **Radical minimalism.** No wordmark, no header. Two translucent corner controls (search, settings). The lens rail at the bottom is the only other fixed thing, because it is used constantly.

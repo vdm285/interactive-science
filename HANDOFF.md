@@ -2,6 +2,31 @@
 
 The state of the code, dated. `docs/VISION.md` is the plan; this file is what exists. Newest section first.
 
+## 2026-10-21, later — Victor's direction: the table never disappears
+
+Victor's answers to the checkpoint cards: name **Materia**; the table must stay on screen as the universe (as the globe should in Giramundo); wide exploration from element to element without losing it, and a second tap on the highlighted element that zooms into its tile and opens like a door into the deep dive; lenses folded into one button; next round is media depth; desktop first, phones later. His full note is in `docs/VISION.md`.
+
+### Shipped in this round
+
+- **Three layers.** Table (full viewport) → **peek** (`#fe`): the stage animates into a 36vh band along the top (`@property --tile` makes the tile size itself transition), the highlighted tile lifts with an "Entrar ›" pill under it, and the element's world fills the rest: hero photograph (tap to dive), name, capsule, pronunciation, a row of **doors** (one per available panel, each with a live visual: the spectrum strip, a mini Bohr, isotope counts, the discovery year, crustal abundance, the first gallery image, the video poster, the mass) and a hint line. Arrow keys walk the table in the peek; Enter dives; Escape returns to the full table. → **deep** (`#fe/luz`): the deck as before; Escape, the chevron or the medallion field **surface** back to the peek.
+- **The dive** (`src/app/transitions.js`): one fixed element wearing the hero photo grows from the tile's rectangle to the viewport (620 ms), the deck mounts beneath it, and the face swings open on its left hinge (`rotateY(-108deg)`, 720 ms) and is removed. The surface runs it backwards: door closes, face shrinks to the tile in the band. With animations off both are instant. No WebGL, no library.
+- **Lenses** are one translucent button bottom-right showing the current lens; its popover lists the seven with a line of help each and the family or property chips. The temperature and year sliders, and the heatmap legend, float as a pill at the bottom center only on the full table.
+- **Video panel**: the Periodic Videos episode per element (118 of 118, ids verified keylessly through YouTube oEmbed), a poster with the channel's own thumbnail, and the nocookie player only after a tap. Pipeline in `tools/build-videos.mjs`.
+- Readout line moved to the top center. Phone breakpoint at 640 px.
+
+### Liberties in this round
+
+1. The band is a 36vh strip along the top (not a side column): the table is wide, so the top keeps it legible at 28 px tiles on a 1440 px screen; names come through the readout and the hover.
+2. The peek is the Materia panel's content plus doors; the deck still opens on Materia (full-bleed photo and "Leer"), so the door animation lands on the same picture that was just zoomed.
+3. Doors dive straight to their panel; the hint sentence explains the second tap once, under the doors, and the pill makes it visible.
+4. The animation is CSS only, by design: lightweight, no GPU work beyond one composited layer, nothing to download. Blender is not needed.
+
+### Audit log for this round
+
+- The body carried a `peek` class for the view and the `.peek` layout rule hit the body itself (position fixed, top 36vh); renamed to `peeking`. Rule written into AGENTS.md.
+- The browser pane, when hidden, freezes CSS transitions at their start value and its screenshots came back cropped at device pixels; measurements had to be taken from the DOM. Lesson added to the playbook.
+- Still to verify by eye: the door swing mid-animation on a real GPU (Victor's Chrome).
+
 ## 2026-10-21 — the rebuild, first checkpoint
 
 Rebuilt from scratch as **Materia** (working name) in one unguided session, mining the first version (Tabla Viva, 2026-10-15) for the Spanish names, the phase rule and tests, and the Pages workflow. Victor has not yet reviewed any of it; expect direction changes.

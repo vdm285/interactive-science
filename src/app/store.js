@@ -19,6 +19,7 @@ export const state = {
   isotopes: null,
   history: null,
   abundance: null,
+  videos: null,          // public/data/videos.json
   wikiIndex: null,
   galleryIndex: null,
   wiki: new Map(),       // z -> wiki/{z}.json

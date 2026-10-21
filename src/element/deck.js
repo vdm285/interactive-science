@@ -6,14 +6,15 @@ import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { state, set } from '../app/store.js';
 import { COPY, PANELS } from '../app/i18n.js';
-import { openElement, openPanel, backToTable } from '../app/router.js';
-import { spectrumOf, abundanceOf } from '../data/load.js';
-import { materia, luz, atomo, nucleo, historia, mundo, imagenes, datos, lightbox, galleryItems } from './panels.js';
+import { openElement, openPanel } from '../app/router.js';
+import { surface } from '../app/transitions.js';
+import { spectrumOf, abundanceOf, videoOf } from '../data/load.js';
+import { materia, luz, atomo, nucleo, historia, mundo, imagenes, video, datos, lightbox, galleryItems } from './panels.js';
 import { FAMILY_COLOR } from '../table/lenses.js';
 
 const t = () => COPY[state.lang];
 const nameOf = (e) => e.name[state.lang] || e.name.en;
-const RENDER = { materia, luz, atomo, nucleo, historia, mundo, imagenes, datos };
+const RENDER = { materia, luz, atomo, nucleo, historia, mundo, imagenes, video, datos };
 
 /** Panels that have something genuine to show for this element. */
 export function availablePanels(e, s) {
@@ -25,13 +26,14 @@ export function availablePanels(e, s) {
       return s.gallery.has(e.z) ? galleryItems(e.z).length > 0 : true;
     }
     if (p === 'nucleo') return !!s.isotopes;
+    if (p === 'video') return !!videoOf(e.z);
     return true;
   });
 }
 
 function medallion(e, s) {
   const c = t();
-  return html`<svg class="medallion" viewBox="0 0 18 10.4" role="navigation" aria-label=${c.back} @click=${(ev) => { if (ev.target === ev.currentTarget) backToTable(); }}>
+  return html`<svg class="medallion" viewBox="0 0 18 10.4" role="navigation" aria-label=${c.back} @click=${(ev) => { if (ev.target === ev.currentTarget) surface(); }}>
     ${s.elements.map((x) => {
       const row = x.y >= 9 ? x.y - 0.6 : x.y;
       return html`<rect class=${classMap({ on: x.z === e.z })} x=${x.x - 1 + 0.08} y=${row - 1 + 0.08} width=".84" height=".84" rx=".12" fill=${FAMILY_COLOR[x.family]} @click=${(ev) => { ev.stopPropagation(); openElement(x.z, s.panel); }}><title>${nameOf(x)}</title></rect>`;
@@ -49,7 +51,7 @@ export function deckView(s) {
   const next = s.byZ.get(e.z + 1);
   return html`
     <div class="deck" style=${styleMap({ '--swatch': FAMILY_COLOR[e.family] })}>
-      <button type="button" class="corner back" aria-label=${c.back} title=${`${c.back} (Esc)`} @click=${backToTable}>
+      <button type="button" class="corner back" aria-label=${c.back} title=${`${c.back} (Esc)`} @click=${surface}>
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <div class="panels" id="panels" @scroll=${onScroll}>

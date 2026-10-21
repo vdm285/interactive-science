@@ -18,6 +18,7 @@ Run everything with `npm run data:all`, or one at a time:
 | `build-history.mjs` | `history` | `history.json` | 150 KB | Wikidata (CC0): P575, P61, P138, P189, sitelinks |
 | `build-abundance.mjs` | `abundance` | `abundance.json` | 60 KB | Wikipedia "Abundances of the elements (data page)" and two sibling pages, quoting CRC, Anders & Grevesse, Croswell and the human-body table; see `docs/research/abundance-sources.md` |
 | `build-gallery.mjs` | `gallery` | `gallery/{z}.json`, `gallery/index.json` | 40 KB each | The ES and EN Wikipedia articles' own media lists; Commons license per file |
+| `build-videos.mjs` | `videos` | `videos.json` | 60 KB | periodicvideos.com element pages (keyless), each id verified through YouTube oEmbed; embedded with the nocookie player |
 
 ## Elements
 
@@ -52,6 +53,10 @@ One figure per element per medium: crust (CRC Handbook, mg/kg), sea water (CRC, 
 ## Gallery
 
 `https://{es,en}.wikipedia.org/api/rest_v1/page/media-list/{title}`, merged by file title with the Spanish caption first. Filtered out: non-images, SVG and GIF, icons and logos, periodic-table overviews, electron-shell diagrams, the NFPA diamond, anything under 400 px wide, and any file whose Commons license fails `licenseOk`. At most 24 per element, the Spanish article's first image first. Each item: file, `thumb` (500 px) and `src` (1280 px) URLs, dimensions, captions, artist, license, license URL, Commons page. `data/overrides/gallery.json` can exclude, include or pin the first image.
+
+## Videos
+
+`http://www.periodicvideos.com/videos/{ZZZ}.htm` (three digits; the site's HTTPS certificate belongs to its host, so plain HTTP is used and recorded) carries one YouTube iframe per element. Every id is verified keylessly with `https://www.youtube.com/oembed?url=...` and kept only when the channel is exactly "Periodic Videos" (University of Nottingham, Brady Haran). 118 of 118. The app embeds `https://www.youtube-nocookie.com/embed/{id}` only after the reader taps the poster; nothing is downloaded or re-hosted. `data/overrides/videos.json` forces or removes an id.
 
 ## Adding a source
 
