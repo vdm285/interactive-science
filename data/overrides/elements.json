@@ -1,0 +1,8 @@
+{
+  "_doc": "Per-element overrides applied last by tools/build-elements.mjs. Key is the atomic number as a string; value is an object whose fields replace the built row's fields (same names as in public/data/elements.json). Use it to correct a source error with a cited reason in `_note`. Never add a number without a source.",
+  "113": {
+    "_note": "Bowserinator's category text for nihonium reads 'unknown, probably transition metal'. Nihonium sits in group 13 under thallium; the English Wikipedia article (https://en.wikipedia.org/wiki/Nihonium) and PubChem's group block ('Post-transition metal') place it with the post-transition metals, as a prediction. The family stays marked uncertain.",
+    "family": "post",
+    "familyUncertain": true
+  }
+}

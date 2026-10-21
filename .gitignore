@@ -1,6 +1,12 @@
 node_modules/
 dist/
-data-cache.json
 .vite/
 *.log
+.DS_Store
+Thumbs.db
 shot-*.png
+shot-dom.html
+# Downloads and scratch stay on D:, under the project, never committed.
+data/cache/
+# Legacy raw dataset from the first version; now fetched by tools/build-elements.mjs into data/cache/.
+data-cache.json

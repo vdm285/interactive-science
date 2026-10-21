@@ -3,42 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Tabla Viva: toca un elemento y mira de qué está hecho el mundo.">
-  <meta name="theme-color" content="#10140f">
-  <title>Tabla Viva</title>
+  <meta name="description" content="Materia: la tabla periódica en fotografías, luz, núcleos e historia. Toca un elemento.">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="color-scheme" content="dark">
+  <title>Materia</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
-  <header class="top">
-    <button id="logo" class="logo" type="button">Tabla Viva</button>
-    <form id="searchForm" class="search" role="search" autocomplete="off">
-      <input id="q" type="search" placeholder="Busca: oro, Fe, 79" aria-label="Buscar un elemento">
-      <div id="suggest" class="suggest" hidden></div>
-    </form>
-    <button id="lang" class="ghost" type="button" data-action="lang">EN</button>
-    <button id="reto" class="ghost" type="button" data-action="reto">Reto</button>
-    <button id="more" class="ghost" type="button" data-action="more">Más</button>
-  </header>
-  <div class="lab">
-    <label class="temp">
-      <span id="tempLabel">Temperatura</span>
-      <input id="temp" type="range" min="-200" max="3500" step="25" value="25">
-      <strong id="tempValue">25 °C</strong>
-    </label>
-    <div id="legend" class="legend"></div>
-  </div>
-  <div class="stage">
-    <div class="board" id="board">
-      <div id="table" class="ptable" role="grid" aria-label="Tabla periódica"></div>
-      <p id="phoneNote" class="phone-note"></p>
-    </div>
-    <aside id="card" class="card" aria-live="off"></aside>
-  </div>
-  <div id="retobar" class="retobar" hidden></div>
-  <p id="toast" class="toast" hidden></p>
-  <dialog id="moreDialog"></dialog>
-  <div id="live" class="sr" aria-live="polite"></div>
+  <div id="app"></div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

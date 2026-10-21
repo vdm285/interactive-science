@@ -1,23 +1,35 @@
 {
-  "name": "tabla-viva",
+  "name": "materia",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
+  "description": "Materia: the periodic table as photographs, light, nuclei and history. Spanish first, static, free.",
   "scripts": {
-    "data": "node tools/build-elements.mjs && node tools/fetch-es.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "data": "node tools/build-elements.mjs",
+    "wiki": "node tools/build-wiki.mjs",
+    "photos": "node tools/build-photos.mjs",
+    "spectra": "node tools/build-spectra.mjs",
+    "isotopes": "node tools/build-isotopes.mjs",
+    "history": "node tools/build-history.mjs",
+    "abundance": "node tools/build-abundance.mjs",
+    "gallery": "node tools/build-gallery.mjs",
+    "data:all": "npm run data && npm run wiki && npm run photos && npm run spectra && npm run isotopes && npm run history && npm run abundance && npm run gallery"
+  },
+  "dependencies": {
+    "@fontsource/fraunces": "^5.2.9",
+    "@fontsource/outfit": "^5.2.8",
+    "lit": "^3.3.3"
   },
   "devDependencies": {
+    "sharp": "^0.35.5",
     "vite": "^6.3.5"
   },
   "allowScripts": {
-    "esbuild@0.25.12": true
-  },
-  "dependencies": {
-    "@fontsource/fraunces": "^5.3.0",
-    "@fontsource/outfit": "^5.3.0"
+    "esbuild@0.25.12": true,
+    "sharp@0.35.5": true
   }
 }
