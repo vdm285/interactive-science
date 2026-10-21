@@ -12,8 +12,16 @@ const t = () => COPY[state.lang];
 const nameOf = (e) => e.name[state.lang] || e.name.en;
 
 export function openSearch() {
-  set({ search: { open: true, q: '', hits: [] } });
-  requestAnimationFrame(() => document.getElementById('q')?.focus());
+  set({ search: { open: true, q: '', hits: [], focusPending: true } });
+}
+
+/** Called after every render: focuses the search field the first time it appears. */
+export function focusSearchIfPending() {
+  if (!state.search.open || !state.search.focusPending) return;
+  const input = document.getElementById('q');
+  if (!input) return;
+  input.focus();
+  state.search.focusPending = false;
 }
 
 function onSearchInput(ev) {

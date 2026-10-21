@@ -303,7 +303,8 @@ body.no-motion .atom .electron { opacity: 0.95; }
   .stage { padding: 56px 8px 0; align-items: start; overflow: auto; }
   .ptable { grid-template-columns: repeat(18, max(var(--tile), 36px)); grid-template-rows: repeat(7, max(var(--tile), 36px)) 14px repeat(2, max(var(--tile), 36px)); }
   .tile .nm { display: none; }
-  .rail { width: calc(100vw - 16px); }
+  .rail { width: calc(100vw - 70px); left: 62px; transform: none; align-items: flex-start; }
+  .readout { text-align: left; font-size: 0.8rem; }
   .lenses { flex-wrap: wrap; justify-content: center; border-radius: 16px; }
   .atomo { grid-template-columns: 1fr; }
   .bar-row { grid-template-columns: 1fr; gap: 4px; }

@@ -12,7 +12,7 @@ import { COPY } from './app/i18n.js';
 import { applyHash, openElement, backToTable, openPanel } from './app/router.js';
 import { loadCore, loadExtras, loadElementFiles, spectrumOf } from './data/load.js';
 import { tableView } from './table/table.js';
-import { searchView, settingsView, openSearch } from './app/shell.js';
+import { searchView, settingsView, openSearch, focusSearchIfPending } from './app/shell.js';
 import { deckView, availablePanels, scrollToPanel, wheelToPanels } from './element/deck.js';
 import { drawSpectrum } from './draw/spectrum.js';
 
@@ -31,6 +31,7 @@ let lastView = null;
 let lastZ = null;
 
 function afterRender(s) {
+  focusSearchIfPending();
   document.body.classList.toggle('no-motion', !s.motion);
   document.documentElement.lang = s.lang;
   if (s.view === 'element' && s.z) {
