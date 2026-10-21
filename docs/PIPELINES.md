@@ -28,7 +28,7 @@ Known gaps the screen must tolerate: no melting point for Db–Rg and Og; no boi
 
 ## Wikipedia extracts
 
-`https://{es,en}.wikipedia.org/api/rest_v1/page/summary/{title}`. Spanish titles come from `tools/names.mjs` plus a small map for titles that need disambiguation (Zinc, Criptón, Circonio, Indio (elemento), Yodo, Tántalo (elemento), Wolframio, Mercurio (elemento), Radio (elemento)). Disambiguation pages are rejected. Each file carries `title`, `extract`, `url` and the short `description` per language. The index says which languages and whether a pronunciation exists so the app can decide before fetching.
+`https://{es,en}.wikipedia.org/api/rest_v1/page/summary/{title}`. Spanish titles come from `tools/names.mjs` plus a small map for titles that need disambiguation (Zinc, Criptón, Circonio, Indio (elemento), Yodo, Tántalo (elemento), Wolframio, Mercurio (elemento), Radio (elemento)). Disambiguation pages are rejected. The REST summary is only the first paragraph, so the script also asks the MediaWiki extracts API (`prop=extracts&exintro&explaintext`) for the whole lead section, keeps the longer text, cuts it at a sentence under 2,200 characters and strips the zero-width residue of citation markers. Each file carries `title`, `extract`, `url` and the short `description` per language. The index says which languages and whether a pronunciation exists so the app can decide before fetching.
 
 ## Photographs
 
