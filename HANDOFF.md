@@ -39,6 +39,11 @@ Rebuilt from scratch as **Materia** (working name) in one unguided session, mini
 - Gas tiles in the state lens had white text on a pale tile → dark text.
 - Copernicium shows liquid at 25 °C from predicted figures → labeled "predicción".
 - Search opened without focus from the `/` key → focus is now applied after render.
+- On a reload straight onto `#fe/imagenes` the deck stayed on the wrong slide because Luz and Mundo arrived after the first paint and shifted the slides; the gallery's lazy images therefore never started → the scroll now follows the panel id after every layout change, and scroll events are ignored briefly after a programmatic jump.
+- Iron's gallery carried a photon-attenuation chart → plots, charts, diagrams and schematics are rejected by title in the gallery pipeline.
+- The phone layout kicked in below 900 px, which includes a narrow desktop pane → 640 px.
+- A discoverer's description ran into the next discoverer's name → commas, "y", parentheses.
+- Verified by hand after the fixes: hover names on tiles, the "Leer" fold, the lightbox with its credit, search by alias ("wolfr" → Tungsteno), the Settings sheet, the live Pages site (`#w/luz` renders tungsten's 2,774 lines).
 
 ### Known limits
 
