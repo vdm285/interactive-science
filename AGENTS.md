@@ -29,7 +29,7 @@ A static periodic table on GitHub Pages, media first, in three layers. The **tab
 - `src/element/deck.js`: panels container, shelf, medallion, wheel and keys. `src/element/panels.js`: the eight panels.
 - `src/draw/atom.js` (Bohr SVG), `src/draw/spectrum.js` (canvas spectra and the tile strips).
 - `src/logic.js`: pure rules with `tests/logic.test.mjs` as the spec. `src/data/load.js`: two-phase loading and per-element lazy files.
-- `tools/net.mjs`: shared fetch, disk cache, SPARQL, Commons metadata, license filter, thumbnail widths, byte-capped writes. `tools/build-*.mjs`: one pipeline per source (see `docs/PIPELINES.md`). `tools/names.mjs`: Spanish classroom names and RAE aliases.
+- `tools/net.mjs`: shared fetch, disk cache, SPARQL, Commons metadata, license filter, thumbnail widths, byte-capped writes. `tools/build-*.mjs`: one pipeline per source (see `docs/PIPELINES.md`); never import one build script from another (it would run), share code through `tools/net.mjs` and `tools/wiki-titles.mjs`. `tools/names.mjs`: Spanish classroom names and RAE aliases.
 - `public/data/`: committed outputs (`elements.json`, `spectra.json`, `isotopes.json`, `history.json`, `abundance.json`, `videos.json`, `photos.json`, `wiki/{z}.json`, `gallery/{z}.json`). `public/img/tiles/{z}.webp`: 160px tile photographs. Heroes and gallery images are hotlinked from Commons at standard widths.
 - `data/overrides/*.json`: per-subject curation, read by the pipelines, documented inside each file.
 - lit-html renders everything and escapes by default; never use `unsafeHTML` on fetched text.
