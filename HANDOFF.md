@@ -21,6 +21,12 @@ Victor's answers to the checkpoint cards: name **Materia**; the table must stay 
 3. Doors dive straight to their panel; the hint sentence explains the second tap once, under the doors, and the pill makes it visible.
 4. The animation is CSS only, by design: lightweight, no GPU work beyond one composited layer, nothing to download. Blender is not needed.
 
+### Media depth, first pass
+
+- Every element photograph was reviewed at 500 px by a sub-agent; 17 weak picks replaced through `data/overrides/photos.json` (liquid oxygen, refined sulfur, grown platinum, a clear mercury pour, the Hi-Res Images set for seven lanthanides and arsenic, a DOE uranium billet, and so on), each with a `_notes` line. Seven transuranic pictures stay low-resolution because Commons has nothing better; the notes say so.
+- Periodic Videos: 118 of 118 episodes, keyless, verified through oEmbed; a Video panel and a door.
+- Minerals, ores and everyday objects: research and pipeline in progress (`tools/build-things.mjs`, `docs/research/things-sources.md`); see the next section when it lands.
+
 ### Audit log for this round
 
 - The body carried a `peek` class for the view and the `.peek` layout rule hit the body itself (position fixed, top 36vh); renamed to `peeking`. Rule written into AGENTS.md.

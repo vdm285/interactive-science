@@ -51,17 +51,40 @@ export function esTitleCandidates(z) {
 
 const stripUtm = (url) => (url ? url.replace(/\?utm_.*$/, '') : url);
 
+const MAX_EXTRACT = 2200;
+
+async function leadSection(lang, title) {
+  const url = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&exsectionformat=plain&redirects=1&format=json&titles=${encodeURIComponent(title)}`;
+  const data = await getJsonCached(url, 'wiki-extracts');
+  const page = Object.values(data?.query?.pages || {})[0];
+  const text = page?.extract?.trim();
+  return text && text.length > 40 ? text.replace(/\s*\n+\s*/g, '\n\n') : null;
+}
+
+function clip(text) {
+  // Citation markers leave zero-width spaces behind in explaintext; drop them.
+  const t = String(text || '').replace(/[​-‍﻿]/g, '').trim();
+  if (t.length <= MAX_EXTRACT) return t;
+  const cut = t.slice(0, MAX_EXTRACT);
+  const end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('.\n'));
+  return (end > MAX_EXTRACT * 0.5 ? cut.slice(0, end + 1) : cut).trim();
+}
+
 async function summary(lang, title) {
   const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`;
   const data = await getJsonCached(url, 'wiki-summary');
   if (!data) return { status: 'missing' };
   if (data.type === 'disambiguation') return { status: 'disambiguation', title: data.title };
   if (data.type !== 'standard' || !data.extract) return { status: data.type || 'empty', title: data.title };
+  // The REST summary is the first paragraph only; the extracts API gives the whole lead section.
+  // Keep the longer of the two, cut at a sentence boundary under MAX_EXTRACT characters.
+  const lead = await leadSection(lang, data.title);
+  const extract = clip(lead && lead.length > data.extract.length ? lead : data.extract);
   return {
     status: 'ok',
     page: {
       title: data.title,
-      extract: data.extract.trim(),
+      extract,
       url: data.content_urls?.desktop?.page || `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(data.title.replace(/ /g, '_'))}`,
       description: data.description || null,
     },

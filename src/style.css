@@ -225,7 +225,7 @@ body.deep .zoomer { z-index: 45; }
 .read summary { cursor: pointer; display: inline-block; padding: 5px 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: var(--ink); font-size: 0.9rem; list-style: none; }
 .read summary::-webkit-details-marker { display: none; }
 .read[open] summary { background: var(--ink); color: var(--bg); }
-.prose { font-size: 1.02rem; line-height: 1.55; margin: 10px 0 4px; }
+.prose { font-size: 1.02rem; line-height: 1.55; margin: 10px 0 4px; white-space: pre-line; }
 .credit { position: absolute; right: 14px; bottom: 64px; font-size: 0.75rem; color: var(--ink-dim); text-decoration: none; background: rgba(11, 13, 16, 0.5); padding: 3px 8px; border-radius: 6px; max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .credit:hover { color: var(--ink); }
 .deck .medallion ~ .credit, .materia .credit { right: 172px; }
