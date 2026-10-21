@@ -22,6 +22,8 @@ const REJECT_TITLE = [
   /periodic table|tabla periódica|tabla periodica/i,
   /electron shell|capa electrónica|capa electronica/i,
   /nfpa/i,
+  // Plots and schematic figures read badly as photographs in a gallery.
+  /attenuation|graph|chart|plot|diagram|schematic|table|histogram|cross[- ]section/i,
 ];
 const REJECT_EXT = /\.(svg|gif)$/i;
 

@@ -13,7 +13,7 @@ import { applyHash, openElement, backToTable, openPanel } from './app/router.js'
 import { loadCore, loadExtras, loadElementFiles, spectrumOf } from './data/load.js';
 import { tableView } from './table/table.js';
 import { searchView, settingsView, openSearch, focusSearchIfPending } from './app/shell.js';
-import { deckView, availablePanels, scrollToPanel, wheelToPanels } from './element/deck.js';
+import { deckView, availablePanels, scrollToPanel, wheelToPanels, syncPanelScroll } from './element/deck.js';
 import { drawSpectrum } from './draw/spectrum.js';
 
 const app = document.getElementById('app');
@@ -38,12 +38,8 @@ function afterRender(s) {
     const e = s.byZ.get(s.z);
     document.title = `${e.name[s.lang] || e.name.en} · Materia`;
     loadElementFiles(s.z);
-    // Keep the scroll position in sync with the panel in the hash.
-    if (lastView !== 'element' || lastZ !== s.z) {
-      requestAnimationFrame(() => scrollToPanel(s.panel, 'auto'));
-    } else {
-      scrollToPanel(s.panel);
-    }
+    // Keep the scroll position on the panel in the hash, also when a data file adds a slide.
+    syncPanelScroll(s);
     // Draw the spectrum canvas once it exists.
     const canvas = document.querySelector('canvas.spectrum');
     const sp = spectrumOf(s.z);

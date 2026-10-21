@@ -68,9 +68,12 @@ export function deckView(s) {
 }
 
 let scrollTimer = null;
+let suppressUntil = 0;   // ignore scroll events right after a programmatic jump (layout changes fire them too)
 function onScroll(ev) {
+  if (performance.now() < suppressUntil) return;
   clearTimeout(scrollTimer);
   scrollTimer = setTimeout(() => {
+    if (performance.now() < suppressUntil) return;
     const host = ev.target;
     const i = Math.round(host.scrollLeft / host.clientWidth);
     const slide = host.children[i];
@@ -79,14 +82,34 @@ function onScroll(ev) {
   }, 80);
 }
 
+let slideCount = 0;
+let slideZ = null;
+
+/**
+ * Keep the scroll position on the panel named in the state. Called after every render: when the
+ * set of slides changed (a data file arrived and added a panel) or the element changed, jump without
+ * animation; otherwise glide.
+ */
+export function syncPanelScroll(s) {
+  const host = document.getElementById('panels');
+  if (!host) { slideCount = 0; slideZ = null; return; }
+  const changed = host.children.length !== slideCount || slideZ !== s.z;
+  slideCount = host.children.length;
+  slideZ = s.z;
+  scrollToPanel(s.panel, changed ? 'auto' : undefined);
+}
+
 export function scrollToPanel(p, behavior) {
   const host = document.getElementById('panels');
   if (!host) return;
-  const i = [...host.children].findIndex((n) => n.dataset.panel === p);
-  if (i < 0) return;
-  const target = i * host.clientWidth;
+  const slide = [...host.children].find((n) => n.dataset.panel === p) || host.children[0];
+  if (!slide) return;
+  const target = slide.offsetLeft;
   if (Math.abs(host.scrollLeft - target) < 2) return;
-  host.scrollTo({ left: target, behavior: behavior || (state.motion ? 'smooth' : 'auto') });
+  const mode = behavior || (state.motion ? 'smooth' : 'auto');
+  suppressUntil = performance.now() + (mode === 'auto' ? 250 : 900);
+  if (mode === 'auto') host.scrollLeft = target;
+  else host.scrollTo({ left: target, behavior: 'smooth' });
 }
 
 /** Horizontal wheel inside the deck: vertical wheel moves panels when the slide has no vertical room. */
