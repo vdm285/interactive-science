@@ -19,7 +19,7 @@ const MIN_WIDTH = 400;
 // Title-based rejects: icons and chrome, overview tables, shell diagrams, the NFPA diamond.
 const REJECT_TITLE = [
   /nuvola|icon|logo|wiki|commons|flag|symbol|edit-|question|ambox|crystal clear|OOjs|padlock/i,
-  /periodic table|tabla periódica|tabla periodica/i,
+  /periodic table|tabla periódica|tabla periodica|periodensystem|periodisches system|periodiska system/i,
   /electron shell|capa electrónica|capa electronica/i,
   /nfpa/i,
   // Plots and schematic figures read badly as photographs in a gallery.

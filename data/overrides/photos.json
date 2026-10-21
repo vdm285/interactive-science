@@ -1,17 +1,119 @@
 {
-  "_doc": "Curation for tools/build-photos.mjs. Keys are atomic numbers as strings. A value of null forces 'no photograph' for that element (the app shows the Bohr model). An object replaces the automatic pick: 'file' is the exact Commons title including the 'File:' prefix (its license is still checked and must be free), 'kind' is one of sample, tube, crystal, other, and 'focus' is the crop anchor for the 160x160 tile: center, top, bottom, left or right (default: sharp's attention strategy). Keys starting with an underscore are ignored.",
-  "_notes": {
-    "26": "Alchemist-hp's electrolytic iron with the 1 cm3 cube, FAL. Same as the automatic pick; kept here as the verified example of the shape.",
-    "86": "Wikidata's image for radon is a water apparatus in a hotel dining hall, not the element. Radon is an invisible gas; Commons has no photograph of it.",
-    "87": "Wikidata's image for francium is a vial of uranium mineral that contains francium only as trace decay atoms. Not a photograph of the element.",
-    "100": "Commons' only fermium image is an alloy carrying 0.00004 % fermium by weight: not a photograph of the element. Forced null; the Bohr model stands in."
+  "8": {
+    "file": "File:Liquid oxygen in a beaker (cropped and retouched).jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "9": {
+    "file": "File:Fluoro liquido a -196°C.jpg",
+    "kind": "sample",
+    "focus": "bottom"
+  },
+  "16": {
+    "file": "File:Sulfur-sample.jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "19": {
+    "file": "File:Potassium.JPG",
+    "kind": "sample",
+    "focus": "center"
   },
   "26": {
     "file": "File:Iron electrolytic and 1cm3 cube.jpg",
     "kind": "sample",
     "focus": "center"
   },
+  "33": {
+    "file": "File:Arsenic (33 As).jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "53": {
+    "file": "File:Iodine-sample.jpg",
+    "kind": "crystal",
+    "focus": "center"
+  },
+  "57": {
+    "file": "File:Lanthanum-2.jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "58": {
+    "file": "File:Cerium.jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "59": {
+    "file": "File:Praseodymium (59 Pr).jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "60": {
+    "file": "File:Neodymium (60 Nd).jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "65": {
+    "file": "File:Terbium (65 Tb).jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "66": {
+    "file": "File:Dysprosium (66 Dy).jpg",
+    "kind": "crystal",
+    "focus": "center"
+  },
+  "67": {
+    "file": "File:Holmium (67 Ho).jpg",
+    "kind": "crystal",
+    "focus": "center"
+  },
+  "78": {
+    "file": "File:Platinum crystals.jpg",
+    "kind": "crystal",
+    "focus": "center"
+  },
+  "80": {
+    "file": "File:Pouring liquid mercury bionerd.jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "81": {
+    "file": "File:8 grams pure thallium under argon. Original size in cm - 0.7 x 1.5.jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
   "86": null,
   "87": null,
-  "100": null
+  "92": {
+    "file": "File:HEUraniumC.jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "100": null,
+  "_doc": "Curation for tools/build-photos.mjs. Keys are atomic numbers as strings. A value of null forces 'no photograph' for that element (the app shows the Bohr model). An object replaces the automatic pick: 'file' is the exact Commons title including the 'File:' prefix (its license is still checked and must be free), 'kind' is one of sample, tube, crystal, other, and 'focus' is the crop anchor for the 160x160 tile: center, top, bottom, left or right (default: sharp's attention strategy). Keys starting with an underscore are ignored.",
+  "_notes": {
+    "8": "Was a discharge tube (Oxygen discharge tube.jpg). Now liquid oxygen, pale blue in a beaker (Staff Sgt. Nika Glover, U.S. Air Force, public domain, 1024x1280).",
+    "9": "Was Liquid fluorine tighter crop.jpg, 373x305 and blurry. Now liquid fluorine, yellow in a test tube at -196 C (Fulvio314, CC BY-SA 3.0, 1200x1673); the liquid sits in the lower half, so the tile crops to the bottom.",
+    "16": "Was a native sulfur mineral specimen from a Bolivian mine. Now refined sulfur chunks on white (Ben Mills, public domain, 1925x1444).",
+    "19": "Was K crystal.jpg, an unverified close-up inside an ampoule. Now freshly cut potassium pieces, silvery (Dnn87, CC BY 3.0, 4000x3000).",
+    "26": "Alchemist-hp's electrolytic iron with the 1 cm3 cube, FAL. Same as the automatic pick; kept here as the verified example of the shape.",
+    "33": "Was Arsen 1.jpg, 297x500, a mineral-looking specimen in a tube. Now metallic arsenic lumps in a sealed ampoule from the Hi-Res Images of Chemical Elements set (CC BY 3.0, 720x720).",
+    "53": "Was Sample of iodine.jpg, a dark and blurry pile. Now a sharp pile of iodine crystals on white (Benjah-bmm27, public domain, 2021x1516).",
+    "57": "Was Lanthan prvek.jpg, a hand-held vial of powder in a lab, unverified. Now a 1 cm piece of pure lanthanum in an ampoule (Jurii, CC BY 3.0, 708x708).",
+    "58": "Was CE2k2g.jpg, 400x219. Now a 1 cm piece of cerium in an ampoule (Jurii, CC BY 3.0, 676x676).",
+    "59": "Was Praseodym 1.jpg, 352x500. Now praseodymium metal pieces in a sealed ampoule, Hi-Res Images of Chemical Elements (CC BY 3.0, 932x932).",
+    "60": "Was Neodym 1.jpg, 431x500. Now a cut neodymium block in a sealed ampoule, Hi-Res Images of Chemical Elements (CC BY 3.0, 782x782).",
+    "65": "Was Terbium element.jpg, 667x500. Now a terbium lump on white, Hi-Res Images of Chemical Elements (CC BY 3.0, 704x704).",
+    "66": "Was Dysprosium1.jpg, 667x500. Now a dendritic dysprosium piece, Hi-Res Images of Chemical Elements (CC BY 3.0, 1208x1208).",
+    "67": "Was Holmium.jpg, 667x500. Now a dendritic ultrapure holmium piece, Hi-Res Images of Chemical Elements (CC BY 3.0, 1068x1068).",
+    "78": "Was Platinum-nugget.jpg, a native nugget. Now crystals of pure platinum grown by gas-phase transport (Periodictableru, CC BY 3.0, 2084x1460).",
+    "80": "Was a 1955 archival photograph of mercury drops, unverified category fallback. Now liquid mercury being poured into a dish (Bionerd, CC BY 3.0, 1209x1311).",
+    "81": "Was Thallium sample.jpg, a tiny ampoule under water where the metal is barely visible. Now a close-up of 8 g of thallium under argon, Hi-Res Images of Chemical Elements (CC BY 3.0, 800x800).",
+    "86": "Wikidata's image for radon is a water apparatus in a hotel dining hall, not the element. Radon is an invisible gas; Commons has no photograph of it.",
+    "87": "Wikidata's image for francium is a vial of uranium mineral that contains francium only as trace decay atoms. Not a photograph of the element.",
+    "92": "Was Metallic Uranium.jpg (a small bar in an ampoule on graph paper, verified but tiny in the frame). Now a billet of highly enriched uranium in gloved hands, Y-12 (U.S. DOE, public domain, 3200x2560).",
+    "100": "Commons' only fermium image is an alloy carrying 0.00004 % fermium by weight: not a photograph of the element. Forced null; the Bohr model stands in."
+  }
 }
