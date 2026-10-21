@@ -1,0 +1,17 @@
+{
+  "_doc": "Curation for tools/build-photos.mjs. Keys are atomic numbers as strings. A value of null forces 'no photograph' for that element (the app shows the Bohr model). An object replaces the automatic pick: 'file' is the exact Commons title including the 'File:' prefix (its license is still checked and must be free), 'kind' is one of sample, tube, crystal, other, and 'focus' is the crop anchor for the 160x160 tile: center, top, bottom, left or right (default: sharp's attention strategy). Keys starting with an underscore are ignored.",
+  "_notes": {
+    "26": "Alchemist-hp's electrolytic iron with the 1 cm3 cube, FAL. Same as the automatic pick; kept here as the verified example of the shape.",
+    "86": "Wikidata's image for radon is a water apparatus in a hotel dining hall, not the element. Radon is an invisible gas; Commons has no photograph of it.",
+    "87": "Wikidata's image for francium is a vial of uranium mineral that contains francium only as trace decay atoms. Not a photograph of the element.",
+    "100": "Commons' only fermium image is an alloy carrying 0.00004 % fermium by weight: not a photograph of the element. Forced null; the Bohr model stands in."
+  },
+  "26": {
+    "file": "File:Iron electrolytic and 1cm3 cube.jpg",
+    "kind": "sample",
+    "focus": "center"
+  },
+  "86": null,
+  "87": null,
+  "100": null
+}
