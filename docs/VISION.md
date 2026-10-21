@@ -23,6 +23,14 @@ The second thing it should do is give you something to do after the first tap. T
 - **Process:** show a portfolio of rough working demos of such a visual decision before implementing it in full. `docs/portfolio/SPEC.md` and the three prototypes there are that portfolio.
 - **Later, prepare for it:** cut the element photographs out of their backgrounds so only the matter remains (`docs/research/cutouts.md`).
 
+### Victor's picks from the portfolio (2026-10-21, night)
+
+- **Vitrina** becomes the real table (with Holograma's shell fly-through borrowed for the push-in).
+- The push-in goes **through the nucleus into the first photograph**: the bloom resolves directly into the element's hero, which is the deck's first panel.
+- **Lenses become light inside the boxes** (photo on the back wall, family glow, frozen or boiling atoms for the state, dark boxes for the undiscovered, the spectrum projected on the wall, atoms scaled by radius, heatmap floors).
+- **Cutouts**: prototype on ten elements now, then decide.
+- The integration plan is `docs/portfolio/INTEGRATION.md`.
+
 ## Taste rules applied here
 
 - **Radical minimalism.** No wordmark, no header. Two translucent corner controls (search, settings). The lens rail at the bottom is the only other fixed thing, because it is used constantly.

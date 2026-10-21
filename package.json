@@ -24,7 +24,8 @@
   "dependencies": {
     "@fontsource/fraunces": "^5.2.9",
     "@fontsource/outfit": "^5.2.8",
-    "lit": "^3.3.3"
+    "lit": "^3.3.3",
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "sharp": "^0.35.5",
