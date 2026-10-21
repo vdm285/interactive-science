@@ -326,7 +326,7 @@ export function datos(e, s) {
         ${row(es ? 'Apariencia' : 'Appearance', e.appearance, '', 'bowserinator')}
         ${e.discoveredBy && !/\d{3,4}\s*BC|^\d+$/.test(e.discoveredBy) ? row(es ? 'Descubridor (dataset)' : 'Discovered by (dataset)', e.discoveredBy, '', 'bowserinator') : nothing}
         ${row(L('year'), e.ancient ? (es ? 'Antigüedad' : 'Ancient') : e.yearDiscovered, '', 'pubchem')}
-        ${h?.discovered != null ? row(`${L('year')} (Wikidata)`, h.discovered, '', 'wikidata') : nothing}
+        ${h?.discovered != null ? row(`${L('year')} (Wikidata)`, h.discovered < 0 ? `${s.lang === 'es' ? 'hacia' : 'circa'} ${-h.discovered} a. C.` : h.discovered, '', 'wikidata') : nothing}
       </tbody>
     </table>
     ${e.predictedHeavy ? html`<p class="note dim">${c.predictedHeavy}</p>` : nothing}
