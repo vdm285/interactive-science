@@ -29,6 +29,12 @@ Victor's answers to the checkpoint cards: name **Materia**; the table must stay 
 - **Cosas** panel (`cosas` in `src/element/panels.js`, data `public/data/things/{z}.json` from `tools/build-things.mjs`): minerals and ores whose formula carries the element (Wikidata P274 plus the "minerals by element" categories), and objects made from it or its alloys (P186, P527, P366), each with a Commons photo, Spanish and English labels, the formula and a link to Wikipedia. Research and coverage in `docs/research/things-sources.md`; curation in `data/overrides/things.json`.
 - Wikipedia extracts are now the whole lead section (MediaWiki extracts API), not the first paragraph.
 
+### If you continue from here
+
+1. Victor has not yet seen the peek, the dive or Cosas; expect direction. The band placement (top strip) is my baseline; a side column or a bottom strip is a layout-only change.
+2. Things curation: famous unlinked objects go in by QID in `data/overrides/things.json` (a curation pass ran on 2026-10-21; see its notes there). The objects half is limited by Wikidata's own coverage.
+3. Parked: compounds as a second level under an element, quiz and compare as modes, phone polish, a `via` provenance tag on things cards.
+
 ### Audit log for this round
 
 - The body carried a `peek` class for the view and the `.peek` layout rule hit the body itself (position fixed, top 36vh); renamed to `peeking`. Rule written into AGENTS.md.
