@@ -69,7 +69,7 @@ function tileStyle(e, s, maxRadius) {
 function tileValue(e, s) {
   const c = t();
   switch (s.lens) {
-    case 'estado': return c.phase[phaseClass(e, s.celsius)];
+    case 'estado': return `${c.phase[phaseClass(e, s.celsius)]}${e.predictedHeavy && (e.melt != null || e.boil != null) ? ` · ${s.lang === 'es' ? 'predicción' : 'predicted'}` : ''}`;
     case 'historia': {
       if (e.ancient) return c.ancient;
       const y = discoveryYear(e);

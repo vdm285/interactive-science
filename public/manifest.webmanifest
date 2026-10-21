@@ -1,11 +1,12 @@
 {
-  "name": "Tabla Viva",
-  "short_name": "Tabla Viva",
+  "name": "Materia",
+  "short_name": "Materia",
+  "description": "La tabla periódica en fotografías, luz, núcleos e historia.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#10140f",
-  "theme_color": "#10140f",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
   "lang": "es",
   "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
 }
