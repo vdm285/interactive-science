@@ -1,13 +1,374 @@
 {
-  "_doc": "Curation for tools/build-gallery.mjs (npm run gallery). Keys are atomic numbers as strings. exclude: Commons file titles (File:...) to drop even though an article uses them. include: extra Commons files to add; their license is still checked and they are dropped if not free; captions stay null unless an article supplies one. first: the file that should lead the gallery. Everything else comes from the Spanish and English Wikipedia articles, Spanish article order first, then English additions. Re-run npm run gallery after editing.",
+  "1": {
+    "exclude": [
+      "File:2023-10-19 Clean Hydrogen Ladder 5.0.png",
+      "File:SMR+WGS-1.png",
+      "File:Hindenburg at lakehurst.jpg",
+      "File:Hindenburg burning.jpg",
+      "File:Hindenburg over New York 1937 (cropped).jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Policy infographic and process flowchart are not photographs of hydrogen; the three Hindenburg images are a disaster story, not the element."
+  },
+  "3": {
+    "exclude": [
+      "File:Environmental protests in Belgrade, 11 December 2021.jpg",
+      "File:US Navy 040626-N-5319A-006 An Anti-Submarine Warfare (ASW) MK-50 Torpedo is launched from guided missile destroyer USS Bulkeley (DDG 84).jpg",
+      "File:Castle Bravo Blast.jpg",
+      "File:Falcon 9 Booster (2997226647).jpg",
+      "File:Lithium prices.webp"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Protest, torpedo launch, nuclear test and rocket booster are off-topic or violent; price chart."
+  },
   "6": {
-    "exclude": ["File:Centrilobular emphysema 865 lores.jpg"],
+    "exclude": [
+      "File:Centrilobular emphysema 865 lores.jpg"
+    ],
     "include": [],
     "first": null
   },
+  "7": {
+    "exclude": [
+      "File:Neon orbitals.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Neon orbital diagram on the nitrogen page: wrong element."
+  },
+  "8": {
+    "exclude": [
+      "File:Phanerozoic Climate Change-es.png",
+      "File:Phanerozoic Climate Change.png",
+      "File:Symptoms of oxygen toxicity.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Two geological-time climate charts and a medical symptoms infographic; none shows oxygen."
+  },
+  "9": {
+    "exclude": [
+      "File:HF burned hands.jpg",
+      "File:Prozac pills.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Chemical-burn injury photo is graphic; branded pills are a drug, not the element."
+  },
+  "12": {
+    "exclude": [
+      "File:محتویات درون ریتورت.jpg",
+      "File:Bugatti Aérolithe AV.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Persian-titled retort-contents photo is unreadable context; the Bugatti is a car, not a magnesium sample."
+  },
+  "13": {
+    "exclude": [
+      "File:044 - Canterbury - Queen Elizabeth's Guest Chamber von 1573.jpg",
+      "File:Head D15A3.JPG",
+      "File:Waste bins recyclable.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Tudor room, an engine cylinder head and recycling bins are tangential to aluminium."
+  },
+  "17": {
+    "exclude": [
+      "File:Chlorine attack1.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "'Chlorine attack' corrosion photo reads as violence and shows a plumbing joint, not chlorine."
+  },
+  "28": {
+    "exclude": [
+      "File:Nickel Prices.webp"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Price chart."
+  },
+  "30": {
+    "exclude": [
+      "File:Price of Zinc.webp"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Price chart."
+  },
+  "34": {
+    "exclude": [
+      "File:Luna statue.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Statue of the goddess Selene: namesake only."
+  },
+  "35": {
+    "exclude": [
+      "File:Bromo-Seltzer Tower MD2.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "A Baltimore clock tower named after a brand; not bromine."
+  },
+  "43": {
+    "exclude": [
+      "File:Zirconium-tetrachloride-3D-balls-A.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Zirconium compound model on the technetium page: wrong element."
+  },
+  "45": {
+    "exclude": [
+      "File:Rh price.png",
+      "File:Rhodium daily Price 1992-2022.webp"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Two price charts."
+  },
+  "46": {
+    "exclude": [
+      "File:Palladium Prices.webp"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Price chart."
+  },
+  "48": {
+    "exclude": [
+      "File:Tyne and Wear Metro train 4001 at Pelaw 01.jpg",
+      "File:Jinzu River.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "A train painted cadmium orange and a river landscape: neither shows cadmium."
+  },
+  "49": {
+    "exclude": [
+      "File:Kristallstruktur Chrom(III)-chlorid.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Chromium chloride structure on the indium page: wrong element."
+  },
+  "50": {
+    "exclude": [
+      "File:SnPrice.png",
+      "File:Tin Prices.webp"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Two price charts."
+  },
+  "58": {
+    "exclude": [
+      "File:Ceres - RC3 - Haulani Crater (22381131691).jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "The dwarf planet Ceres: namesake only."
+  },
+  "72": {
+    "exclude": [
+      "File:Apollo AS11-40-5866.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Apollo lunar module photo: the hafnium nozzle is not visible as such."
+  },
+  "77": {
+    "exclude": [
+      "File:Winged goddess Cdm Paris 392.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "The goddess Iris: namesake only."
+  },
+  "79": {
+    "exclude": [
+      "File:Gold price in USD.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Price chart."
+  },
+  "80": {
+    "exclude": [
+      "File:HgProductionPrice.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Price and production chart."
+  },
+  "82": {
+    "exclude": [
+      "File:Symptoms of lead poisoning (raster).png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Medical symptoms infographic, same class as the oxygen toxicity one."
+  },
+  "83": {
+    "exclude": [
+      "File:BiPrice.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Price chart."
+  },
   "87": {
     "exclude": [],
-    "include": ["File:Pitchblende schlema-alberoda.JPG"],
+    "include": [
+      "File:Pitchblende schlema-alberoda.JPG"
+    ],
     "first": null
-  }
+  },
+  "90": {
+    "exclude": [
+      "File:Mårten Eskil Winge - Tor's Fight with the Giants - Google Art Project.jpg",
+      "File:Indian Point Nuclear Power Plant.jpg",
+      "File:CaF2 polyhedra.png",
+      "File:Kristallstruktur Uran(IV)-fluorid.png",
+      "File:Uranocene-3D-balls.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Thor painting is namesake only; Indian Point is a uranium plant; CaF2, UF4 and uranocene models are other compounds used as structural analogs."
+  },
+  "92": {
+    "exclude": [
+      "File:Uranus Voyager2 color calibrated.png",
+      "File:Atomic cloud over Hiroshima - NARA 542192 - Edit.jpg",
+      "File:Uranium prices.webp",
+      "File:MonthlyUraniumSpot.png",
+      "File:U production-demand.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Planet Uranus is namesake only; Hiroshima mushroom cloud is disturbing; three price/production charts."
+  },
+  "93": {
+    "exclude": [
+      "File:Rhenium single crystal bar and 1cm3 cube.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Rhenium sample on the neptunium page: wrong element."
+  },
+  "94": {
+    "exclude": [
+      "File:Nagasakibomb.jpg",
+      "File:Pluto in True Color - High-Res.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Nagasaki mushroom cloud is disturbing; the dwarf planet Pluto is namesake only."
+  },
+  "95": {
+    "exclude": [
+      "File:Ivy Mike - mushroom cloud.jpg",
+      "File:Uranocene-3D-balls.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Nuclear-test mushroom cloud; uranocene model stands in for another compound."
+  },
+  "96": {
+    "exclude": [
+      "File:Ivy Mike - mushroom cloud.jpg",
+      "File:Uranocene-3D-balls.png"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Nuclear-test mushroom cloud; uranocene model stands in for another compound."
+  },
+  "98": {
+    "exclude": [
+      "File:Operation Crossroads Baker Edit.jpg"
+    ],
+    "include": [],
+    "first": "File:Berkeley 60-inch cyclotron.jpg",
+    "_notes": "Nuclear-test mushroom cloud excluded. First: the Berkeley 60-inch cyclotron where californium was first made; the remaining items are production schemes."
+  },
+  "99": {
+    "exclude": [
+      "File:Ivy Mike - mushroom cloud.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Nuclear-test mushroom cloud."
+  },
+  "100": {
+    "exclude": [
+      "File:Ivy Mike - mushroom cloud.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Nuclear-test mushroom cloud."
+  },
+  "101": {
+    "exclude": [],
+    "include": [],
+    "first": "File:Berkeley 60-inch cyclotron.jpg",
+    "_notes": "First: the Berkeley 60-inch cyclotron where mendelevium was first made; the other items are an energy plot and a Mendeleev portrait."
+  },
+  "103": {
+    "exclude": [],
+    "include": [],
+    "first": "File:96904536.thumb3.jpeg",
+    "_notes": "First: the codiscoverers at the HILAC controls writing Lw into the table (only photograph; the other item is an elution plot)."
+  },
+  "105": {
+    "exclude": [
+      "File:Niels Bohr.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Portrait of Bohr is namesake only; it was the sole image, so dubnium has no gallery. No sample or apparatus photo available, first left null."
+  },
+  "110": {
+    "exclude": [
+      "File:Luisenplatz, Darmstadt.jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "City-centre view of Darmstadt is namesake only; it was the sole image, so darmstadtium has no gallery."
+  },
+  "115": {
+    "exclude": [
+      "File:RedSquare (pixinn.net).jpg"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Red Square is namesake only. Only a stability diagram remains; no sample or apparatus photo, first left null."
+  },
+  "116": {
+    "exclude": [],
+    "include": [],
+    "first": null,
+    "_notes": "Only a stability diagram; no sample or apparatus photo, first left null."
+  },
+  "117": {
+    "exclude": [
+      "File:Berkelium.jpg",
+      "File:CorneliusVanderbiltStatue.JPG"
+    ],
+    "include": [],
+    "first": null,
+    "_notes": "Berkelium sample is another element; the Vanderbilt statue is a campus photo. Only diagrams and geometry models remain; no photo, first left null."
+  },
+  "118": {
+    "exclude": [],
+    "include": [],
+    "first": null,
+    "_notes": "No sample or apparatus photo; the JINR entrance in Dubna already leads, so first left null."
+  },
+  "_doc": "Curation for tools/build-gallery.mjs (npm run gallery). Keys are atomic numbers as strings. exclude: Commons file titles (File:...) to drop even though an article uses them. include: extra Commons files to add; their license is still checked and they are dropped if not free; captions stay null unless an article supplies one. first: the file that should lead the gallery. Everything else comes from the Spanish and English Wikipedia articles, Spanish article order first, then English additions. Re-run npm run gallery after editing."
 }
