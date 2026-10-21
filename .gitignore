@@ -10,3 +10,6 @@ shot-dom.html
 data/cache/
 # Legacy raw dataset from the first version; now fetched by tools/build-elements.mjs into data/cache/.
 data-cache.json
+# Python environment for the cutout pipeline (tools/cutout.py); rebuilt with: python -m venv data/venv && data/venv/Scripts/pip install rembg[cpu] onnxruntime
+data/venv/
+__pycache__/

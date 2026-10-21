@@ -1,0 +1,27 @@
+{
+  "6": "auto",
+  "11": "keep",
+  "14": "keep",
+  "16": "auto",
+  "26": "auto",
+  "29": "auto",
+  "78": "keep",
+  "79": {
+    "model": "u2net"
+  },
+  "80": "keep",
+  "83": "auto",
+  "_doc": "Curation for tools/build-cutouts.mjs. Keys are atomic numbers as strings. \"auto\" (or an absent key) runs the default: model isnet-general-use, margin 0.08. \"keep\" means the original photograph is used as is and no cutout is written, for subjects where a cutout makes no sense (a vessel such as a beaker or an ampoule, a hand, a sample on its matrix, a sample cut by the frame) or where the model lost parts of the sample. An object sets per-element options: \"model\" (isnet-general-use, u2net, ...), \"margin\" (fraction of the longer side of the alpha bounding box, default 0.08), \"minBlob\" (drop alpha islands smaller than this fraction of the largest island, default 0), \"alphaMatting\" (true for rembg's slow edge refinement). Every cutout keeps the license and credit of its source photograph; public/img/cutouts/index.json copies them next to the model used. Keys starting with an underscore are ignored; _notes explains each decision.",
+  "_notes": {
+    "6": "Glassy carbon and the graphite cube on black (Alchemist-hp): clean.",
+    "11": "The sodium pieces fill the frame and are cut flat by it at the top and the bottom; the cutout also keeps a patch of the bench on the right. The original stays; a different photograph could be cut out.",
+    "14": "The subject is a clear acrylic display cube with the silicon inside. The model keeps the cube correctly, but the white studio background shows through the clear block, so on any other floor it reads as a milky block. A vessel: the original stays.",
+    "16": "Refined sulfur chunks on white (Ben Mills): clean edges, every crumb kept; a faint haze of the original shadow survives under the pile. Acceptable.",
+    "26": "Electrolytic iron and the cube on black (Alchemist-hp): clean.",
+    "29": "The copper disc (Alchemist-hp): clean, the scale bar removed, the rim crisp.",
+    "78": "Platinum crystals on millimetre graph paper, a lacy cluster: the model keeps patches of the paper and its grid lines between the crystals. A sample on its matrix: the original stays.",
+    "79": "Gold dendrites (Alchemist-hp). isnet-general-use leaves soft patches of the white background inside the lattice; u2net keeps the lattice clean and the branches crisp; alpha matting is worse (white kept around the base, hundreds of fragments). Clean with u2net.",
+    "80": "Liquid mercury poured from a vial into a glass dish: a pour into a vessel. The cutout keeps a ghost of the dish, the stream and a reflection. The original stays.",
+    "83": "Bismuth crystals and the cube on white (Alchemist-hp): clean."
+  }
+}
