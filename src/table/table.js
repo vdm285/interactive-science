@@ -7,7 +7,7 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { state, set, savePrefs } from '../app/store.js';
 import { COPY, LENSES } from '../app/i18n.js';
-import { openPeek } from '../app/router.js';
+import { openPeek, backToTable } from '../app/router.js';
 import { dive } from '../app/transitions.js';
 import { fmt, extent } from '../logic.js';
 import { photoOf, spectrumOf, tileUrl } from '../data/load.js';
@@ -99,7 +99,7 @@ function onTile(e, s) {
 function tile(e, s, maxRadius) {
   const seen = s.seen[e.z] != null;
   const selected = s.view === 'peek' && s.z === e.z;
-  const showName = s.view === 'table' && (s.lens === 'familias' || s.lens === 'historia');
+  const showName = s.lens === 'familias' || s.lens === 'historia';
   return html`<button
     type="button"
     class=${classMap({ tile: true, seen, selected, 'has-ball': s.lens === 'tamano', 'no-photo': s.lens === 'fotos' && !(s.photosOn && photoOf(e.z)), gas: s.lens === 'estado' && phaseClass(e, s.celsius) === 'gas', dark: s.lens === 'datos' && (heat(s.elements, s.property, e).t ?? 0) > 0.7 })}
@@ -130,7 +130,6 @@ function enterPill(s) {
 /** Sliders and pickers for the lens that needs them; only on the full table. */
 export function lensControls(s) {
   const c = t();
-  if (s.view !== 'table') return nothing;
   if (s.lens === 'estado') {
     const k = s.celsius + 273.15;
     return html`<div class="control pill">
@@ -190,7 +189,7 @@ export function tableView(s) {
   const c = t();
   const [, maxRadius] = extent(s.elements, radiusOf);
   return html`
-    <main class=${classMap({ stage: true, band: s.view === 'peek' })} aria-label=${c.appName}>
+    <main class="stage" aria-label=${c.appName} @click=${(ev) => { if (s.view === 'peek' && !ev.target.closest('.tile, .enter')) backToTable(); }}>
       <div class="ptable" role="grid">
         ${s.elements.map((e) => tile(e, s, maxRadius))}
         <span class="marker" style="grid-column:3; grid-row:6">57–71</span>

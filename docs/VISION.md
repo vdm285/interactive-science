@@ -15,6 +15,14 @@ The second thing it should do is give you something to do after the first tap. T
 - **Lenses fold into one button** (bottom-right), not a rail. Name: **Materia**. Next round: media depth (curated photographs, minerals and ores, everyday objects, the Periodic Videos episode per element).
 - Desktop and laptop first; phones later.
 
+## Victor's second review (2026-10-21, evening)
+
+- **Rejected: the band.** The table must take the whole viewport at all times, minimal padding, with only the translucent corner controls over it. Shrinking it to a strip is out.
+- **Element info as a side card** overlaid on the table, left or right depending on where the element sits (the side is decided by column, so the card never covers the element it describes), like the dossier over the globe in Giramundo. The table never scrolls, moves or shrinks.
+- **Rejected: the CSS zoom-and-door** ("a cheap PowerPoint"). Wanted instead: the table as a case of **stacked transparent glass boxes** with clear outlines, each holding a **live miniature 3D atom** (spinning, glowing electrons; faithful counts for small atoms, an honest approximation for the heavy ones; name on hover). The dive zooms toward the chosen box **without losing the neighbors at the edges**, the box's glass door opens, the camera pushes into the atom toward the nucleus, and the picture flows into the deck. In-browser 3D at world-class polish, light on the GPU; Blender only if needed.
+- **Process:** show a portfolio of rough working demos of such a visual decision before implementing it in full. `docs/portfolio/SPEC.md` and the three prototypes there are that portfolio.
+- **Later, prepare for it:** cut the element photographs out of their backgrounds so only the matter remains (`docs/research/cutouts.md`).
+
 ## Taste rules applied here
 
 - **Radical minimalism.** No wordmark, no header. Two translucent corner controls (search, settings). The lens rail at the bottom is the only other fixed thing, because it is used constantly.

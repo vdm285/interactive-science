@@ -4,6 +4,7 @@
 import { html, nothing } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { state } from '../app/store.js';
+import { backToTable } from '../app/router.js';
 import { COPY } from '../app/i18n.js';
 import { fmt, phaseAt, cToKelvin } from '../logic.js';
 import { photoOf, spectrumOf, isotopesOf, abundanceOf, videoOf, tileUrl } from '../data/load.js';
@@ -66,6 +67,11 @@ function doorBody(p, e, s) {
   }
 }
 
+/** Which side the card takes: away from the element, decided by its column. */
+export function cardSide(e) {
+  return e.x <= 9 ? 'right' : 'left';
+}
+
 export function peekView(s) {
   const e = s.byZ.get(s.z);
   if (!e) return nothing;
@@ -76,17 +82,19 @@ export function peekView(s) {
   const phase = phaseAt(e, cToKelvin(25)).phase;
   const fam = FAMILY_COLOR[e.family];
   const panels = availablePanels(e, s);
-  return html`<section class="peek" style=${styleMap({ '--swatch': fam })} @click=${(ev) => { if (ev.target.closest('.peek-hero')) dive(e.z, 'materia'); }}>
-    <div class="peek-hero" title=${c.enter}>
+  return html`<aside class=${`card-side ${cardSide(e)}`} style=${styleMap({ '--swatch': fam })} aria-label=${nameOf(e)}>
+    <button type="button" class="x card-x" aria-label=${c.close} @click=${backToTable}>×</button>
+    <div class="card-hero" title=${c.enter} @click=${() => dive(e.z, 'materia')}>
       ${photo
         ? html`<img src=${photo.medium} alt=${nameOf(e)} decoding="async">`
-        : html`<div class="peek-model">${atomSvg(e, { animate: s.motion, size: 360, color: fam })}</div>`}
+        : html`<div class="peek-model">${atomSvg(e, { animate: s.motion, size: 300, color: fam })}</div>`}
       ${photo ? html`<a class="credit" href=${photo.page} target="_blank" rel="noreferrer" @click=${(ev) => ev.stopPropagation()}>${c.photoBy}: ${photo.artist || 'Wikimedia Commons'} · ${photo.license}</a>` : nothing}
     </div>
-    <div class="peek-text">
+    <div class="card-body">
       <p class="eyebrow">${c.family[e.family]}${e.familyUncertain ? html` <span class="dim">· ${c.familyUncertain}</span>` : nothing} · ${c.phase[phase]} ${c.at} 25 °C</p>
       <h1>${nameOf(e)}</h1>
-      <p class="capsule"><span class="sym">${e.symbol}</span><span>${e.z} ${c.protons}</span><span>${fmt(e.mass, s.lang, 4)} u</span>${w?.description ? html`<span class="desc">${w.description}</span>` : nothing}</p>
+      <p class="capsule"><span class="sym">${e.symbol}</span><span>${e.z} ${c.protons}</span><span>${fmt(e.mass, s.lang, 4)} u</span></p>
+      ${w?.description ? html`<p class="dim desc">${w.description}</p>` : nothing}
       ${!photo ? html`<p class="dim small">${c.bohr} ${e.z > 100 ? c.noPhotoHeavy : c.noPhoto}</p>` : nothing}
       ${wiki?.pronunciation ? html`<button type="button" class="ghost small" @click=${() => new Audio(wiki.pronunciation.url).play()} title=${`${wiki.pronunciation.artist || 'Lingua Libre'} · ${wiki.pronunciation.license}`}>▶ ${c.pronounce}</button>` : nothing}
       <div class="doors">
@@ -95,7 +103,8 @@ export function peekView(s) {
           <span class="door-body">${doorBody(p, e, s)}</span>
         </button>`)}
       </div>
+      <button type="button" class="enter-big" @click=${() => dive(e.z, 'materia')}>${c.enter} ›</button>
       <p class="hint dim small">${c.diveHint}</p>
     </div>
-  </section>`;
+  </aside>`;
 }

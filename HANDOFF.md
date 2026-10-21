@@ -2,6 +2,20 @@
 
 The state of the code, dated. `docs/VISION.md` is the plan; this file is what exists. Newest section first.
 
+## 2026-10-21, evening — Victor's second review: side cards, glass boxes, a portfolio
+
+His verdict on the round above: the band is rejected (the table must own the viewport always), the CSS zoom-and-door is rejected ("cheap PowerPoint"), the element info should be a card over the table on the side away from the element, and the real vision is a case of glass boxes with live 3D atoms, a zoom that keeps the neighbors, a glass door, and a push into the atom. He asked for a portfolio of rough working demos before any full implementation. Full note in `docs/VISION.md`.
+
+### Done in response
+
+- **Side card replaces the band** (`src/table/peek.js`, `src/style.css`): the table stays full size; the card slides in on the right for columns 1–9 and on the left for 10–18 (f-block rows by column too), translucent dark glass, hero on top, capsule, pronunciation, doors in two columns, Entrar, a close button; Escape or a click on the table's empty space closes it; clicking another tile swaps the card and flips the side when needed. The old dive stays wired behind Entrar until the portfolio pick replaces it; it is known to be rejected.
+- **Portfolio** (`docs/portfolio/`): `SPEC.md` (shared requirements, the three options), `demo-data.js` (real element data embedded), three prototypes built by parallel sub-agents and reviewed against the spec, published as artifacts (links in the checkpoint message and in `docs/portfolio/README.md`).
+- **Cutouts plan**: `docs/research/cutouts.md`.
+
+### Open until Victor picks
+
+- Which option (or which mix) becomes the real table: it replaces the CSS tile grid with a three.js scene; the lenses must then paint the boxes (family glow, state, spectra as light inside the box); a `?simple` mode keeps the current CSS table for weak GPUs.
+
 ## 2026-10-21, later — Victor's direction: the table never disappears
 
 Victor's answers to the checkpoint cards: name **Materia**; the table must stay on screen as the universe (as the globe should in Giramundo); wide exploration from element to element without losing it, and a second tap on the highlighted element that zooms into its tile and opens like a door into the deep dive; lenses folded into one button; next round is media depth; desktop first, phones later. His full note is in `docs/VISION.md`.
