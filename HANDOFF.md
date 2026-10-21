@@ -12,9 +12,9 @@ His verdict on the round above: the band is rejected (the table must own the vie
 - **Portfolio** (`docs/portfolio/`): `SPEC.md` (shared requirements, the three options), `demo-data.js` (real element data embedded), three prototypes built by parallel sub-agents, reviewed against the spec by adversarial reviewers, fixed, and verified by eye: A Vitrina https://claude.ai/artifact/JkP9ZaEgtCEk5drtXAmox7 · B Holograma https://claude.ai/artifact/E7iQtK8UpuWjGztpsnUCCj · C Caja https://claude.ai/artifact/H4chyw5bGi398noUgDSDhH (table in `docs/portfolio/README.md`).
 - **Cutouts plan**: `docs/research/cutouts.md`.
 
-### Open until Victor picks
+### Victor picked (same evening)
 
-- Which option (or which mix) becomes the real table: it replaces the CSS tile grid with a three.js scene; the lenses must then paint the boxes (family glow, state, spectra as light inside the box); a `?simple` mode keeps the current CSS table for weak GPUs.
+- **Vitrina** is the table, with Holograma's shell fly-through in the push-in; the bloom resolves directly into the element's photograph (the deck's Materia panel); the lenses become light inside the boxes; the CSS table stays as the simple mode; cutouts prototyped on ten elements. The implementation plan is `docs/portfolio/INTEGRATION.md`; `three` 0.160.0 is a dependency, loaded as a separate chunk. The port runs as a four-stage workflow (port, lenses, adversarial review, fix) with a dated subsection below when it lands.
 
 ## 2026-10-21, later — Victor's direction: the table never disappears
 
