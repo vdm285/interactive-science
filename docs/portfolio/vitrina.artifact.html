@@ -1,0 +1,977 @@
+<!--
+  Materia · prototipo A · Vitrina (museum glass case). One file; three.js 0.160.0 from cdnjs; data inlined from demo-data.js.
+  Frame cost, measured 2026-10-21 in the Claude desktop app's Chromium pane emulating 1920x1080 (the console prints a
+  "[vitrina] ..." line every 5 s with the same numbers; add ?fps=1 to see it on screen):
+    idle table   58-60 fps, 8 draw calls, 33.7k triangles, JS per frame 0.14-0.26 ms (everything animates in the vertex shaders)
+    ?simple=1    7 draw calls, 24.4k triangles
+    dive         5-second windows that contained the dive and the open card logged 33-46 fps; the drop is GPU/compositor
+                 (card backdrop blur, additive overdraw while electrons fill the screen, plus the screenshot capture used to
+                 inspect it), not JS, which stayed under 0.5 ms. GPU time itself is not observable from JS; not measured on an
+                 integrated-GPU laptop.
+-->
+<title>Materia · Vitrina</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Outfit:wght@400;600&display=swap">
+<style>
+:root {
+  --bg: #0b0d10;
+  --ink: #f2eee6;
+  --ink-dim: rgba(242, 238, 230, 0.62);
+  --ink-faint: rgba(242, 238, 230, 0.35);
+  --line: rgba(255, 255, 255, 0.09);
+  --gold: #e8c872;
+  --display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --body: "Outfit", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --fam: #7d7a73;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background:
+    radial-gradient(1400px 620px at 50% -12%, rgba(232, 200, 114, 0.10), transparent 62%),
+    radial-gradient(1100px 520px at 50% 112%, rgba(70, 82, 104, 0.16), transparent 64%),
+    var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.4;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.4s ease; touch-action: none; }
+#gl.in { opacity: 1; }
+.vignette {
+  position: fixed; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(ellipse 78% 72% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.42) 100%);
+}
+
+/* corner keep-out placeholders */
+.corner {
+  position: fixed; z-index: 30; width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: 50%; color: var(--ink); opacity: 0.45; background: rgba(18, 21, 26, 0.35);
+  border: 1px solid var(--line); backdrop-filter: blur(6px);
+}
+.corner svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; }
+.c-lens { top: 10px; left: 10px; }
+.c-cog { bottom: 10px; left: 10px; }
+.c-lenses { bottom: 10px; right: 10px; }
+.tag {
+  position: fixed; top: 16px; right: 18px; z-index: 30; pointer-events: none;
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* hover name */
+.tip {
+  position: fixed; left: 0; top: 0; z-index: 20; pointer-events: none; white-space: nowrap; text-align: center;
+  transform: translate(-50%, -100%); padding: 8px 14px 9px; border-radius: 12px;
+  background: rgba(14, 16, 20, 0.84); border: 1px solid var(--line); backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5); opacity: 0; transition: opacity 0.15s;
+}
+.tip.on { opacity: 1; }
+.tip b { display: block; font-family: var(--display); font-weight: 500; font-size: 1.15rem; letter-spacing: -0.01em; line-height: 1.15; }
+.tip small { display: block; color: var(--ink-dim); font-size: 0.76rem; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.tip small em { color: var(--fam); font-style: normal; font-weight: 500; }
+
+/* card */
+.card {
+  position: fixed; z-index: 40; top: 66px; bottom: 66px; width: clamp(300px, 34vw, 580px);
+  display: flex; flex-direction: column; border-radius: 20px; overflow: hidden;
+  background: rgba(14, 16, 20, 0.64); border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  visibility: hidden;
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.55s;
+}
+.card.right { right: 10px; transform: translateX(calc(100% + 24px)); }
+.card.left { left: 10px; transform: translateX(calc(-100% - 24px)); }
+.card.open { transform: none; visibility: visible; transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s; }
+.card .x {
+  position: absolute; top: 12px; right: 12px; z-index: 3; width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(14, 16, 20, 0.6); border: 1px solid var(--line); color: var(--ink);
+  font-size: 1.35rem; line-height: 1; display: grid; place-items: center; backdrop-filter: blur(8px);
+}
+.card .x:hover { background: rgba(255, 255, 255, 0.12); }
+.hero { position: relative; margin: 0; flex: 0 0 42%; min-height: 160px; background: #0e1013; overflow: hidden; }
+.hero img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity 0.7s; }
+.hero img.ok { opacity: 1; }
+.hero .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 55%; background: linear-gradient(to top, rgba(14, 16, 20, 0.96), transparent); pointer-events: none; }
+.hero .credit { position: absolute; left: 18px; right: 18px; bottom: 10px; font-size: 0.72rem; color: var(--ink-dim); letter-spacing: 0.02em; }
+.hero .nophoto {
+  position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-faint);
+  font-family: var(--display); font-style: italic; font-size: 1.05rem;
+  background: radial-gradient(circle at 50% 62%, color-mix(in srgb, var(--fam) 24%, transparent), transparent 70%);
+}
+.hero .nophoto[hidden] { display: none; } /* the author rule above would otherwise beat the UA [hidden] */
+.cbody { padding: 18px 22px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+.kicker { font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); }
+.kicker em { color: var(--fam); font-style: normal; }
+.card h1 { margin: 0; font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 3.6vw, 3.4rem); line-height: 0.95; letter-spacing: -0.02em; }
+.meta { display: flex; gap: 16px; align-items: baseline; color: var(--ink-dim); flex-wrap: wrap; }
+.meta .sym { font-family: var(--display); font-weight: 600; font-size: 1.7rem; color: var(--fam); line-height: 1; }
+.mono { font-variant-numeric: tabular-nums; }
+.shells { font-size: 0.85rem; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim); font-size: 0.85rem; background: rgba(255, 255, 255, 0.03); }
+.enter {
+  margin-top: 8px; height: 48px; border-radius: 14px; background: var(--ink); color: var(--bg); font-weight: 500;
+  display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s, transform 0.2s;
+}
+.enter:hover { background: #ffffff; transform: translateY(-1px); }
+.enter svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* bloom and deck */
+#bloom {
+  position: fixed; inset: -25%; z-index: 50; pointer-events: none; opacity: 0; will-change: opacity, transform;
+  background: radial-gradient(circle at 50% 50%, #fff9ee 0%, #ffeccb 20%, rgba(255, 218, 168, 0.92) 38%, rgba(255, 196, 128, 0) 70%);
+  mix-blend-mode: screen;
+}
+.deck {
+  position: fixed; inset: 0; z-index: 60; opacity: 0; pointer-events: none;
+  display: flex; flex-direction: column; justify-content: center; padding: 0 clamp(24px, 8vw, 140px);
+  background:
+    radial-gradient(900px 640px at 72% 18%, color-mix(in srgb, var(--fam) 16%, transparent), transparent 70%),
+    radial-gradient(700px 400px at 20% 100%, rgba(232, 200, 114, 0.05), transparent 70%),
+    #0b0d10;
+}
+.deck.on { pointer-events: auto; }
+.reduced .deck { transition: opacity 0.3s; }
+.reduced .card { transition: opacity 0.3s, transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.55s; }
+.reduced .card.open { transition: opacity 0.3s, transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s; }
+.deck .kicker { opacity: 0; transform: translateY(10px); transition: opacity 0.5s 0.05s, transform 0.5s 0.05s; }
+.deck h1 { margin: 10px 0 26px; font-family: var(--display); font-weight: 500; font-size: clamp(3rem, 9vw, 8rem); line-height: 0.92; letter-spacing: -0.025em; opacity: 0; transform: translateY(14px); transition: opacity 0.6s 0.1s, transform 0.6s 0.1s; }
+.deck .meta { opacity: 0; transition: opacity 0.6s 0.2s; margin-bottom: 36px; }
+.panels { display: flex; flex-wrap: wrap; gap: 10px 24px; color: var(--ink-dim); font-size: 1.05rem; opacity: 0; transform: translateY(10px); transition: opacity 0.6s 0.25s, transform 0.6s 0.25s; }
+.panels span { padding-bottom: 6px; border-bottom: 1px solid transparent; }
+.panels span.on { color: var(--ink); border-bottom-color: var(--fam); }
+.deck.on .kicker, .deck.on h1, .deck.on .meta, .deck.on .panels { opacity: 1; transform: none; }
+.volver {
+  position: fixed; top: 10px; left: 10px; height: 44px; padding: 0 18px 0 14px; border-radius: 22px;
+  background: rgba(18, 21, 26, 0.6); border: 1px solid var(--line); color: var(--ink);
+  display: flex; align-items: center; gap: 8px; backdrop-filter: blur(8px);
+}
+.volver:hover { background: rgba(255, 255, 255, 0.1); }
+.volver svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.foot { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; font-size: 0.75rem; color: var(--ink-faint); padding: 0 24px; }
+.fps { position: fixed; z-index: 70; top: 64px; left: 12px; font-size: 11px; color: var(--ink-dim); font-variant-numeric: tabular-nums; pointer-events: none; }
+.help { position: fixed; z-index: 30; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--ink-faint); letter-spacing: 0.04em; pointer-events: none; transition: opacity 0.6s; white-space: nowrap; }
+.help.off { opacity: 0; }
+@media (max-width: 720px) {
+  .card { width: calc(100vw - 20px); }
+  .card.left { left: 10px; }
+  .tag, .help { display: none; }
+}
+</style>
+
+<canvas id="gl"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+
+<div class="corner c-lens" aria-hidden="true" title="Lente"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 20 20"/></svg></div>
+<div class="corner c-cog" aria-hidden="true" title="Ajustes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></div>
+<div class="corner c-lenses" aria-hidden="true" title="Lentes"><svg viewBox="0 0 24 24"><circle cx="8.5" cy="10" r="5"/><circle cx="15.5" cy="10" r="5"/><circle cx="12" cy="15.5" r="5"/></svg></div>
+<div class="tag">Materia · prototipo A · Vitrina</div>
+<div class="help" id="help">Toca una vitrina · doble toque o Entrar para entrar · flechas para moverte</div>
+
+<div id="tip" class="tip" aria-hidden="true"><b id="tipName"></b><small id="tipMeta"></small></div>
+
+<aside id="card" class="card right" aria-hidden="true">
+  <button class="x" id="cardClose" aria-label="Cerrar">×</button>
+  <figure class="hero">
+    <img id="heroImg" alt="">
+    <div class="shade"></div>
+    <div class="nophoto" id="noPhoto" hidden>Sin fotografía</div>
+    <figcaption class="credit" id="credit"></figcaption>
+  </figure>
+  <div class="cbody">
+    <div class="kicker"><span id="cZ"></span> · <em id="cFam"></em></div>
+    <h1 id="cName"></h1>
+    <div class="meta"><span class="sym" id="cSym"></span><span class="mono" id="cMass"></span></div>
+    <div class="shells" id="cShells"></div>
+    <div class="chips">
+      <span class="chip">Luz</span><span class="chip">Átomo</span><span class="chip">Núcleo</span>
+      <span class="chip">Historia</span><span class="chip">Cosas</span><span class="chip">Video</span>
+    </div>
+    <button class="enter" id="enterBtn">Entrar <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div>
+</aside>
+
+<div id="bloom" aria-hidden="true"></div>
+
+<section id="deck" class="deck" aria-hidden="true">
+  <button class="volver" id="volverBtn"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Volver</button>
+  <div class="kicker"><span id="dZ"></span> · <em id="dFam"></em></div>
+  <h1 id="dName"></h1>
+  <div class="meta"><span class="sym" id="dSym"></span><span class="mono" id="dMass"></span><span class="mono" id="dShells"></span></div>
+  <div class="panels">
+    <span class="on">Materia</span><span>Luz</span><span>Átomo</span><span>Núcleo</span><span>Historia</span>
+    <span>Mundo</span><span>Cosas</span><span>Imágenes</span><span>Video</span><span>Datos</span>
+  </div>
+  <div class="foot">Prototipo: los datos de electrones vienen de la configuración real; las fotos de Wikimedia Commons con su licencia</div>
+</section>
+<div id="fps" class="fps" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+<script>
+// Generated by tools/portfolio-data.mjs from public/data/elements.json and photos.json. Do not edit.
+window.MATERIA = {"built":"2026-10-21","FAMILY_COLOR":{"alkali":"#e2654f","alkaline":"#e8973a","transition":"#d9b451","post":"#86a35f","metalloid":"#3f9a8a","nonmetal":"#3f8fc4","halogen":"#6a74cf","noble":"#9a6cc2","lanthanide":"#cf6f94","actinide":"#b8595f","unknown":"#7d7a73"},"elements":[{"z":1,"symbol":"H","es":"Hidrógeno","en":"Hydrogen","x":1,"y":1,"shells":[1],"family":"nonmetal","mass":1.008,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Hydrogen_discharge_tube.jpg/1280px-Hydrogen_discharge_tube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Hydrogen_discharge_tube.jpg/500px-Hydrogen_discharge_tube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":2,"symbol":"He","es":"Helio","en":"Helium","x":18,"y":1,"shells":[2],"family":"noble","mass":4.0026022,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Helium_discharge_tube.jpg/1280px-Helium_discharge_tube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Helium_discharge_tube.jpg/500px-Helium_discharge_tube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"GFDL 1.2"},{"z":3,"symbol":"Li","es":"Litio","en":"Lithium","x":1,"y":2,"shells":[2,1],"family":"alkali","mass":6.94,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Purified_lithium_in_an_ampoule_under_argon%2C_dark_background.png/1280px-Purified_lithium_in_an_ampoule_under_argon%2C_dark_background.png","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Purified_lithium_in_an_ampoule_under_argon%2C_dark_background.png/500px-Purified_lithium_in_an_ampoule_under_argon%2C_dark_background.png","artist":"AdvancedTinkering","license":"CC BY-SA 4.0"},{"z":4,"symbol":"Be","es":"Berilio","en":"Beryllium","x":2,"y":2,"shells":[2,2],"family":"alkaline","mass":9.01218315,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Be-140g.jpg/500px-Be-140g.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Be-140g.jpg/500px-Be-140g.jpg","artist":"Alchemist-hp = Alchemist-hp (pse-mendelejew.de)","license":"CC BY-SA 3.0"},{"z":5,"symbol":"B","es":"Boro","en":"Boron","x":13,"y":2,"shells":[2,3],"family":"metalloid","mass":10.81,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Boron.jpg/1280px-Boron.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Boron.jpg/500px-Boron.jpg","artist":"Jurii","license":"CC BY 3.0"},{"z":6,"symbol":"C","es":"Carbono","en":"Carbon","x":14,"y":2,"shells":[2,4],"family":"nonmetal","mass":12.011,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Glassy_carbon_and_a_1cm3_graphite_cube_HP68-79.jpg/1280px-Glassy_carbon_and_a_1cm3_graphite_cube_HP68-79.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Glassy_carbon_and_a_1cm3_graphite_cube_HP68-79.jpg/500px-Glassy_carbon_and_a_1cm3_graphite_cube_HP68-79.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":7,"symbol":"N","es":"Nitrógeno","en":"Nitrogen","x":15,"y":2,"shells":[2,5],"family":"nonmetal","mass":14.007,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Fluessiger_Stickstoff.jpg/1280px-Fluessiger_Stickstoff.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Fluessiger_Stickstoff.jpg/500px-Fluessiger_Stickstoff.jpg","artist":"Robin Müller","license":"CC BY-SA 3.0"},{"z":8,"symbol":"O","es":"Oxígeno","en":"Oxygen","x":16,"y":2,"shells":[2,6],"family":"nonmetal","mass":15.999,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Liquid_oxygen_in_a_beaker_(cropped_and_retouched).jpg/960px-Liquid_oxygen_in_a_beaker_(cropped_and_retouched).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Liquid_oxygen_in_a_beaker_(cropped_and_retouched).jpg/500px-Liquid_oxygen_in_a_beaker_(cropped_and_retouched).jpg","artist":"Staff Sgt. Nika Glover, U.S. Air Force","license":"Public domain"},{"z":9,"symbol":"F","es":"Flúor","en":"Fluorine","x":17,"y":2,"shells":[2,7],"family":"halogen","mass":18.9984031636,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Fluoro_liquido_a_-196%C2%B0C.jpg/960px-Fluoro_liquido_a_-196%C2%B0C.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Fluoro_liquido_a_-196%C2%B0C.jpg/500px-Fluoro_liquido_a_-196%C2%B0C.jpg","artist":"Fulvio314","license":"CC BY-SA 3.0"},{"z":10,"symbol":"Ne","es":"Neón","en":"Neon","x":18,"y":2,"shells":[2,8],"family":"noble","mass":20.17976,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Neon_discharge_tube.jpg/1280px-Neon_discharge_tube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Neon_discharge_tube.jpg/500px-Neon_discharge_tube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"GFDL 1.2"},{"z":11,"symbol":"Na","es":"Sodio","en":"Sodium","x":1,"y":3,"shells":[2,8,1],"family":"alkali","mass":22.989769282,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Na_(Sodium).jpg/1280px-Na_(Sodium).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Na_(Sodium).jpg/500px-Na_(Sodium).jpg","artist":"The original uploader was Dnn87 at English Wikipedia.","license":"CC BY-SA 3.0"},{"z":12,"symbol":"Mg","es":"Magnesio","en":"Magnesium","x":2,"y":3,"shells":[2,8,2],"family":"alkaline","mass":24.305,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Magnesium_crystals.jpg/960px-Magnesium_crystals.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Magnesium_crystals.jpg/500px-Magnesium_crystals.jpg","artist":"Warut Roonguthai","license":"CC BY-SA 3.0"},{"z":13,"symbol":"Al","es":"Aluminio","en":"Aluminium","x":13,"y":3,"shells":[2,8,3],"family":"post","mass":26.98153857,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Aluminium_bar_surface_etched.jpg/1280px-Aluminium_bar_surface_etched.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Aluminium_bar_surface_etched.jpg/500px-Aluminium_bar_surface_etched.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":14,"symbol":"Si","es":"Silicio","en":"Silicon","x":14,"y":3,"shells":[2,8,4],"family":"metalloid","mass":28.085,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_silicon.JPG/1280px-An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_silicon.JPG","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_silicon.JPG/500px-An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_silicon.JPG","artist":"Rasiel Suarez on behalf of Luciteria LLC","license":"CC BY-SA 4.0"},{"z":15,"symbol":"P","es":"Fósforo","en":"Phosphorus","x":15,"y":3,"shells":[2,8,5],"family":"nonmetal","mass":30.9737619985,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Phosphor.JPG/1280px-Phosphor.JPG","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Phosphor.JPG/500px-Phosphor.JPG","artist":"Dnn87","license":"CC BY 3.0"},{"z":16,"symbol":"S","es":"Azufre","en":"Sulfur","x":16,"y":3,"shells":[2,8,6],"family":"nonmetal","mass":32.06,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Sulfur-sample.jpg/1280px-Sulfur-sample.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Sulfur-sample.jpg/500px-Sulfur-sample.jpg","artist":"Ben Mills","license":"Public domain"},{"z":17,"symbol":"Cl","es":"Cloro","en":"Chlorine","x":17,"y":3,"shells":[2,8,7],"family":"halogen","mass":35.45,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Chlorine_liquid_in_an_ampoule.jpg/1280px-Chlorine_liquid_in_an_ampoule.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Chlorine_liquid_in_an_ampoule.jpg/500px-Chlorine_liquid_in_an_ampoule.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":18,"symbol":"Ar","es":"Argón","en":"Argon","x":18,"y":3,"shells":[2,8,8],"family":"noble","mass":39.9481,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Argon_discharge_tube.jpg/1280px-Argon_discharge_tube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Argon_discharge_tube.jpg/500px-Argon_discharge_tube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"GFDL 1.2"},{"z":19,"symbol":"K","es":"Potasio","en":"Potassium","x":1,"y":4,"shells":[2,8,8,1],"family":"alkali","mass":39.09831,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Potassium.JPG/1280px-Potassium.JPG","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Potassium.JPG/500px-Potassium.JPG","artist":"Dnn87","license":"CC BY 3.0"},{"z":20,"symbol":"Ca","es":"Calcio","en":"Calcium","x":2,"y":4,"shells":[2,8,8,2],"family":"alkaline","mass":40.0784,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Calcium_metal.jpg/1280px-Calcium_metal.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Calcium_metal.jpg/500px-Calcium_metal.jpg","artist":"GOKLuLe","license":"CC BY-SA 3.0"},{"z":21,"symbol":"Sc","es":"Escandio","en":"Scandium","x":3,"y":4,"shells":[2,8,9,2],"family":"transition","mass":44.9559085,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Scandium_sublimed_dendritic_and_1cm3_cube.jpg/1280px-Scandium_sublimed_dendritic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Scandium_sublimed_dendritic_and_1cm3_cube.jpg/500px-Scandium_sublimed_dendritic_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":22,"symbol":"Ti","es":"Titanio","en":"Titanium","x":4,"y":4,"shells":[2,8,10,2],"family":"transition","mass":47.8671,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Titan-crystal_bar.JPG/1280px-Titan-crystal_bar.JPG","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Titan-crystal_bar.JPG/500px-Titan-crystal_bar.JPG","artist":"Alchemist-hp (pse-mendelejew.de)","license":"CC BY-SA 3.0"},{"z":23,"symbol":"V","es":"Vanadio","en":"Vanadium","x":5,"y":4,"shells":[2,8,11,2],"family":"transition","mass":50.94151,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Vanadium_crystal_bar_and_1cm3_cube.jpg/1280px-Vanadium_crystal_bar_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Vanadium_crystal_bar_and_1cm3_cube.jpg/500px-Vanadium_crystal_bar_and_1cm3_cube.jpg","artist":"Alchemist-hp (pse-mendelejew.de).","license":"FAL"},{"z":24,"symbol":"Cr","es":"Cromo","en":"Chromium","x":6,"y":4,"shells":[2,8,13,1],"family":"transition","mass":51.99616,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Chromium_crystals_and_1cm3_cube.jpg/1280px-Chromium_crystals_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Chromium_crystals_and_1cm3_cube.jpg/500px-Chromium_crystals_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":25,"symbol":"Mn","es":"Manganeso","en":"Manganese","x":7,"y":4,"shells":[2,8,13,2],"family":"transition","mass":54.9380443,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Manganese_electrolytic_and_1cm3_cube.jpg/1280px-Manganese_electrolytic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Manganese_electrolytic_and_1cm3_cube.jpg/500px-Manganese_electrolytic_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":26,"symbol":"Fe","es":"Hierro","en":"Iron","x":8,"y":4,"shells":[2,8,14,2],"family":"transition","mass":55.8452,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Iron_electrolytic_and_1cm3_cube.jpg/1280px-Iron_electrolytic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Iron_electrolytic_and_1cm3_cube.jpg/500px-Iron_electrolytic_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":27,"symbol":"Co","es":"Cobalto","en":"Cobalt","x":9,"y":4,"shells":[2,8,15,2],"family":"transition","mass":58.9331944,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Kobalt_electrolytic_and_1cm3_cube.jpg/1280px-Kobalt_electrolytic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Kobalt_electrolytic_and_1cm3_cube.jpg/500px-Kobalt_electrolytic_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":28,"symbol":"Ni","es":"Níquel","en":"Nickel","x":10,"y":4,"shells":[2,8,16,2],"family":"transition","mass":58.69344,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Nickel_electrolytic_and_1cm3_cube.jpg/1280px-Nickel_electrolytic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Nickel_electrolytic_and_1cm3_cube.jpg/500px-Nickel_electrolytic_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":29,"symbol":"Cu","es":"Cobre","en":"Copper","x":11,"y":4,"shells":[2,8,18,1],"family":"transition","mass":63.5463,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Cu-Scheibe.JPG/1280px-Cu-Scheibe.JPG","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Cu-Scheibe.JPG/500px-Cu-Scheibe.JPG","artist":"Alchemist-hp (pse-mendelejew.de)","license":"CC BY-SA 3.0 de"},{"z":30,"symbol":"Zn","es":"Zinc","en":"Zinc","x":12,"y":4,"shells":[2,8,18,2],"family":"transition","mass":65.382,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Zinc_fragment_sublimed_and_1cm3_cube.jpg/1280px-Zinc_fragment_sublimed_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Zinc_fragment_sublimed_and_1cm3_cube.jpg/500px-Zinc_fragment_sublimed_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":31,"symbol":"Ga","es":"Galio","en":"Gallium","x":13,"y":4,"shells":[2,8,18,3],"family":"post","mass":69.7231,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Gallium_Pellets.jpg/1280px-Gallium_Pellets.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Gallium_Pellets.jpg/500px-Gallium_Pellets.jpg","artist":"Best Sci-Fatcs","license":"CC BY-SA 4.0"},{"z":32,"symbol":"Ge","es":"Germanio","en":"Germanium","x":14,"y":4,"shells":[2,8,18,4],"family":"metalloid","mass":72.6308,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Polycrystalline_Germanium.jpg/1280px-Polycrystalline_Germanium.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Polycrystalline_Germanium.jpg/500px-Polycrystalline_Germanium.jpg","artist":"Best Sci-Fatcs","license":"CC BY-SA 4.0"},{"z":33,"symbol":"As","es":"Arsénico","en":"Arsenic","x":15,"y":4,"shells":[2,8,18,5],"family":"metalloid","mass":74.9215956,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Arsenic_(33_As).jpg/500px-Arsenic_(33_As).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Arsenic_(33_As).jpg/500px-Arsenic_(33_As).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":34,"symbol":"Se","es":"Selenio","en":"Selenium","x":16,"y":4,"shells":[2,8,18,6],"family":"nonmetal","mass":78.9718,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Black_Selenium.jpg/1280px-Black_Selenium.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Black_Selenium.jpg/500px-Black_Selenium.jpg","artist":"Best Sci-Fatcs","license":"CC BY-SA 4.0"},{"z":35,"symbol":"Br","es":"Bromo","en":"Bromine","x":17,"y":4,"shells":[2,8,18,7],"family":"halogen","mass":79.904,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Bromine_vial_in_acrylic_cube.jpg/1280px-Bromine_vial_in_acrylic_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Bromine_vial_in_acrylic_cube.jpg/500px-Bromine_vial_in_acrylic_cube.jpg","artist":"Alchemist-hp (pse-mendelejew.de)","license":"CC BY-SA 3.0 de"},{"z":36,"symbol":"Kr","es":"Kriptón","en":"Krypton","x":18,"y":4,"shells":[2,8,18,8],"family":"noble","mass":83.7982,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Krypton_discharge_tube.jpg/1280px-Krypton_discharge_tube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Krypton_discharge_tube.jpg/500px-Krypton_discharge_tube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"GFDL 1.2"},{"z":37,"symbol":"Rb","es":"Rubidio","en":"Rubidium","x":1,"y":5,"shells":[2,8,18,8,1],"family":"alkali","mass":85.46783,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/RbMetal.JPG/1280px-RbMetal.JPG","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/RbMetal.JPG/500px-RbMetal.JPG","artist":"Dnn87","license":"CC BY 3.0"},{"z":38,"symbol":"Sr","es":"Estroncio","en":"Strontium","x":2,"y":5,"shells":[2,8,18,8,2],"family":"alkaline","mass":87.621,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Strontium_destilled_crystals.jpg/1280px-Strontium_destilled_crystals.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Strontium_destilled_crystals.jpg/500px-Strontium_destilled_crystals.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":39,"symbol":"Y","es":"Itrio","en":"Yttrium","x":3,"y":5,"shells":[2,8,18,9,2],"family":"transition","mass":88.905842,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Yttrium_sublimed_dendritic_and_1cm3_cube.jpg/1280px-Yttrium_sublimed_dendritic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Yttrium_sublimed_dendritic_and_1cm3_cube.jpg/500px-Yttrium_sublimed_dendritic_and_1cm3_cube.jpg","artist":"Alchemist-hp (www.pse-mendelejew.de)","license":"FAL"},{"z":40,"symbol":"Zr","es":"Zirconio","en":"Zirconium","x":4,"y":5,"shells":[2,8,18,10,2],"family":"transition","mass":91.2242,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Zirconium_crystal_bar_and_1cm3_cube.jpg/1280px-Zirconium_crystal_bar_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Zirconium_crystal_bar_and_1cm3_cube.jpg/500px-Zirconium_crystal_bar_and_1cm3_cube.jpg","artist":"Alchemist-hp (pse-mendelejew.de).","license":"FAL"},{"z":41,"symbol":"Nb","es":"Niobio","en":"Niobium","x":5,"y":5,"shells":[2,8,18,12,1],"family":"transition","mass":92.906372,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Niobium_crystals_and_1cm3_cube.jpg/1280px-Niobium_crystals_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Niobium_crystals_and_1cm3_cube.jpg/500px-Niobium_crystals_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":42,"symbol":"Mo","es":"Molibdeno","en":"Molybdenum","x":6,"y":5,"shells":[2,8,18,13,1],"family":"transition","mass":95.951,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Molybdenum_crystaline_fragment_and_1cm3_cube.jpg/1280px-Molybdenum_crystaline_fragment_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Molybdenum_crystaline_fragment_and_1cm3_cube.jpg/500px-Molybdenum_crystaline_fragment_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":43,"symbol":"Tc","es":"Tecnecio","en":"Technetium","x":7,"y":5,"shells":[2,8,18,13,2],"family":"transition","mass":98,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Technetium-sample.jpg/1280px-Technetium-sample.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Technetium-sample.jpg/500px-Technetium-sample.jpg","artist":"MARCO CARDIN","license":"CC BY-SA 4.0"},{"z":44,"symbol":"Ru","es":"Rutenio","en":"Ruthenium","x":8,"y":5,"shells":[2,8,18,15,1],"family":"transition","mass":101.072,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Ruthenium_a_half_bar.jpg/1280px-Ruthenium_a_half_bar.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Ruthenium_a_half_bar.jpg/500px-Ruthenium_a_half_bar.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":45,"symbol":"Rh","es":"Rodio","en":"Rhodium","x":9,"y":5,"shells":[2,8,18,16,1],"family":"transition","mass":102.905502,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Rhodium_powder_pressed_melted.jpg/1280px-Rhodium_powder_pressed_melted.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Rhodium_powder_pressed_melted.jpg/500px-Rhodium_powder_pressed_melted.jpg","artist":"Alchemist-hp (talk) www.pse-mendelejew.de derivative work: Purpy Pupple (talk)","license":"CC BY-SA 3.0 de"},{"z":46,"symbol":"Pd","es":"Paladio","en":"Palladium","x":10,"y":5,"shells":[2,8,18,18],"family":"transition","mass":106.421,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Palladium_(46_Pd).jpg/500px-Palladium_(46_Pd).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Palladium_(46_Pd).jpg/500px-Palladium_(46_Pd).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":47,"symbol":"Ag","es":"Plata","en":"Silver","x":11,"y":5,"shells":[2,8,18,18,1],"family":"transition","mass":107.86822,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Silver_crystal.jpg/1280px-Silver_crystal.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Silver_crystal.jpg/500px-Silver_crystal.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"CC BY-SA 3.0 de"},{"z":48,"symbol":"Cd","es":"Cadmio","en":"Cadmium","x":12,"y":5,"shells":[2,8,18,18,2],"family":"transition","mass":112.4144,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Cadmium-crystal_bar.jpg/1280px-Cadmium-crystal_bar.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Cadmium-crystal_bar.jpg/500px-Cadmium-crystal_bar.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":49,"symbol":"In","es":"Indio","en":"Indium","x":13,"y":5,"shells":[2,8,18,18,3],"family":"post","mass":114.8181,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Indium_wetting_glass.jpg/1280px-Indium_wetting_glass.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Indium_wetting_glass.jpg/500px-Indium_wetting_glass.jpg","artist":"Schtone","license":"Public domain"},{"z":50,"symbol":"Sn","es":"Estaño","en":"Tin","x":14,"y":5,"shells":[2,8,18,18,4],"family":"post","mass":118.7107,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Tin_Cylinder.jpg/1280px-Tin_Cylinder.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Tin_Cylinder.jpg/500px-Tin_Cylinder.jpg","artist":"Best Sci-Fatcs","license":"CC BY-SA 4.0"},{"z":51,"symbol":"Sb","es":"Antimonio","en":"Antimony","x":15,"y":5,"shells":[2,8,18,18,5],"family":"metalloid","mass":121.7601,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Antimony-2.jpg/960px-Antimony-2.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Antimony-2.jpg/500px-Antimony-2.jpg","artist":"Jurii","license":"CC BY 3.0"},{"z":52,"symbol":"Te","es":"Telurio","en":"Tellurium","x":16,"y":5,"shells":[2,8,18,18,6],"family":"metalloid","mass":127.603,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Tellurium_pieces.jpg/1280px-Tellurium_pieces.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Tellurium_pieces.jpg/500px-Tellurium_pieces.jpg","artist":"Jan Anskeit","license":"CC BY-SA 4.0"},{"z":53,"symbol":"I","es":"Yodo","en":"Iodine","x":17,"y":5,"shells":[2,8,18,18,7],"family":"halogen","mass":126.904473,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Iodine-sample.jpg/1280px-Iodine-sample.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Iodine-sample.jpg/500px-Iodine-sample.jpg","artist":"Benjah-bmm27","license":"Public domain"},{"z":54,"symbol":"Xe","es":"Xenón","en":"Xenon","x":18,"y":5,"shells":[2,8,18,18,8],"family":"noble","mass":131.2936,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Xenon_discharge_tube.jpg/1280px-Xenon_discharge_tube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Xenon_discharge_tube.jpg/500px-Xenon_discharge_tube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":55,"symbol":"Cs","es":"Cesio","en":"Cesium","x":1,"y":6,"shells":[2,8,18,18,8,1],"family":"alkali","mass":132.905451966,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Cesium.jpg/1280px-Cesium.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Cesium.jpg/500px-Cesium.jpg","artist":"Dnn87 Contact email: Dnn87yahoo.dk","license":"CC BY-SA 3.0"},{"z":56,"symbol":"Ba","es":"Bario","en":"Barium","x":2,"y":6,"shells":[2,8,18,18,8,2],"family":"alkaline","mass":137.3277,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Barium_dendritic.jpg/1280px-Barium_dendritic.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Barium_dendritic.jpg/500px-Barium_dendritic.jpg","artist":"La2O3","license":"CC BY-SA 4.0"},{"z":57,"symbol":"La","es":"Lantano","en":"Lanthanum","x":3,"y":9,"shells":[2,8,18,18,9,2],"family":"lanthanide","mass":138.905477,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Lanthanum-2.jpg/500px-Lanthanum-2.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Lanthanum-2.jpg/500px-Lanthanum-2.jpg","artist":"Jurii (Original uploader was Lanthanum-138 at en.wikipedia","license":"CC BY 3.0"},{"z":58,"symbol":"Ce","es":"Cerio","en":"Cerium","x":4,"y":9,"shells":[2,8,18,19,9,2],"family":"lanthanide","mass":140.1161,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Cerium.jpg/500px-Cerium.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Cerium.jpg/500px-Cerium.jpg","artist":"Jurii","license":"CC BY 3.0"},{"z":59,"symbol":"Pr","es":"Praseodimio","en":"Praseodymium","x":5,"y":9,"shells":[2,8,18,21,8,2],"family":"lanthanide","mass":140.907662,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Praseodymium_(59_Pr).jpg/500px-Praseodymium_(59_Pr).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Praseodymium_(59_Pr).jpg/500px-Praseodymium_(59_Pr).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":60,"symbol":"Nd","es":"Neodimio","en":"Neodymium","x":6,"y":9,"shells":[2,8,18,22,8,2],"family":"lanthanide","mass":144.2423,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Neodymium_(60_Nd).jpg/500px-Neodymium_(60_Nd).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Neodymium_(60_Nd).jpg/500px-Neodymium_(60_Nd).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":61,"symbol":"Pm","es":"Prometio","en":"Promethium","x":7,"y":9,"shells":[2,8,18,23,8,2],"family":"lanthanide","mass":145,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Promethium_Metal_Buttons_(cropped).png/1280px-Promethium_Metal_Buttons_(cropped).png","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Promethium_Metal_Buttons_(cropped).png/500px-Promethium_Metal_Buttons_(cropped).png","artist":"E. J. Wheelwright","license":"Public domain"},{"z":62,"symbol":"Sm","es":"Samario","en":"Samarium","x":8,"y":9,"shells":[2,8,18,24,8,2],"family":"lanthanide","mass":150.362,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_samarium.JPG/1280px-An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_samarium.JPG","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_samarium.JPG/500px-An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_samarium.JPG","artist":"Rasiel Suarez on behalf of Luciteria LLC","license":"CC BY-SA 4.0"},{"z":63,"symbol":"Eu","es":"Europio","en":"Europium","x":9,"y":9,"shells":[2,8,18,25,8,2],"family":"lanthanide","mass":151.9641,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Eu-Block.jpg/1280px-Eu-Block.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Eu-Block.jpg/500px-Eu-Block.jpg","artist":"Alchemist-hp (www.pse-mendelejew.de)","license":"CC BY-SA 3.0 de"},{"z":64,"symbol":"Gd","es":"Gadolinio","en":"Gadolinium","x":10,"y":9,"shells":[2,8,18,25,9,2],"family":"lanthanide","mass":157.253,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Gadolinium_(64_Gd).jpg/960px-Gadolinium_(64_Gd).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Gadolinium_(64_Gd).jpg/500px-Gadolinium_(64_Gd).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":65,"symbol":"Tb","es":"Terbio","en":"Terbium","x":11,"y":9,"shells":[2,8,18,27,8,2],"family":"lanthanide","mass":158.925352,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Terbium_(65_Tb).jpg/500px-Terbium_(65_Tb).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Terbium_(65_Tb).jpg/500px-Terbium_(65_Tb).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":66,"symbol":"Dy","es":"Disprosio","en":"Dysprosium","x":12,"y":9,"shells":[2,8,18,28,8,2],"family":"lanthanide","mass":162.5001,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Dysprosium_(66_Dy).jpg/960px-Dysprosium_(66_Dy).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Dysprosium_(66_Dy).jpg/500px-Dysprosium_(66_Dy).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":67,"symbol":"Ho","es":"Holmio","en":"Holmium","x":13,"y":9,"shells":[2,8,18,29,8,2],"family":"lanthanide","mass":164.930332,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Holmium_(67_Ho).jpg/960px-Holmium_(67_Ho).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Holmium_(67_Ho).jpg/500px-Holmium_(67_Ho).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":68,"symbol":"Er","es":"Erbio","en":"Erbium","x":14,"y":9,"shells":[2,8,18,30,8,2],"family":"lanthanide","mass":167.2593,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Erbium_(68_Er).jpg/960px-Erbium_(68_Er).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Erbium_(68_Er).jpg/500px-Erbium_(68_Er).jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":69,"symbol":"Tm","es":"Tulio","en":"Thulium","x":15,"y":9,"shells":[2,8,18,31,8,2],"family":"lanthanide","mass":168.934222,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Thulium_sublimed_dendritic_and_1cm3_cube.jpg/1280px-Thulium_sublimed_dendritic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Thulium_sublimed_dendritic_and_1cm3_cube.jpg/500px-Thulium_sublimed_dendritic_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":70,"symbol":"Yb","es":"Iterbio","en":"Ytterbium","x":16,"y":9,"shells":[2,8,18,32,8,2],"family":"lanthanide","mass":173.0451,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_ytterbium.jpg/1280px-An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_ytterbium.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_ytterbium.jpg/500px-An_acrylic_cube_specially_prepared_for_element_collectors_containing_a_sample_of_pure_ytterbium.jpg","artist":"Rasiel Suarez on behalf of Luciteria LLC","license":"CC BY-SA 4.0"},{"z":71,"symbol":"Lu","es":"Lutecio","en":"Lutetium","x":17,"y":9,"shells":[2,8,18,32,9,2],"family":"lanthanide","mass":174.96681,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Lutetium_sublimed_dendritic_and_1cm3_cube.jpg/1280px-Lutetium_sublimed_dendritic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Lutetium_sublimed_dendritic_and_1cm3_cube.jpg/500px-Lutetium_sublimed_dendritic_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":72,"symbol":"Hf","es":"Hafnio","en":"Hafnium","x":4,"y":6,"shells":[2,8,18,32,10,2],"family":"transition","mass":178.492,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Hf-crystal_bar.jpg/1280px-Hf-crystal_bar.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Hf-crystal_bar.jpg/500px-Hf-crystal_bar.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"CC BY-SA 3.0 de"},{"z":73,"symbol":"Ta","es":"Tántalo","en":"Tantalum","x":5,"y":6,"shells":[2,8,18,32,11,2],"family":"transition","mass":180.947882,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Tantalum_single_crystal_and_1cm3_cube.jpg/1280px-Tantalum_single_crystal_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Tantalum_single_crystal_and_1cm3_cube.jpg/500px-Tantalum_single_crystal_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":74,"symbol":"W","es":"Tungsteno","en":"Tungsten","x":6,"y":6,"shells":[2,8,18,32,12,2],"family":"transition","mass":183.841,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Wolfram_evaporated_crystals_and_1cm3_cube.jpg/1280px-Wolfram_evaporated_crystals_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Wolfram_evaporated_crystals_and_1cm3_cube.jpg/500px-Wolfram_evaporated_crystals_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":75,"symbol":"Re","es":"Renio","en":"Rhenium","x":7,"y":6,"shells":[2,8,18,32,13,2],"family":"transition","mass":186.2071,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Rhenium_single_crystal_bar_and_1cm3_cube.jpg/1280px-Rhenium_single_crystal_bar_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Rhenium_single_crystal_bar_and_1cm3_cube.jpg/500px-Rhenium_single_crystal_bar_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":76,"symbol":"Os","es":"Osmio","en":"Osmium","x":8,"y":6,"shells":[2,8,18,32,14,2],"family":"transition","mass":190.233,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Osmium_crystals.jpg/1280px-Osmium_crystals.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Osmium_crystals.jpg/500px-Osmium_crystals.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":77,"symbol":"Ir","es":"Iridio","en":"Iridium","x":9,"y":6,"shells":[2,8,18,32,15,2],"family":"transition","mass":192.2173,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Iridium_foil.jpg/1280px-Iridium_foil.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Iridium_foil.jpg/500px-Iridium_foil.jpg","artist":"Dschwen","license":"CC BY 2.5"},{"z":78,"symbol":"Pt","es":"Platino","en":"Platinum","x":10,"y":6,"shells":[2,8,18,32,17,1],"family":"transition","mass":195.0849,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Platinum_crystals.jpg/1280px-Platinum_crystals.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Platinum_crystals.jpg/500px-Platinum_crystals.jpg","artist":"Periodictableru","license":"CC BY 3.0"},{"z":79,"symbol":"Au","es":"Oro","en":"Gold","x":11,"y":6,"shells":[2,8,18,32,18,1],"family":"transition","mass":196.9665695,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Gold-crystals.jpg/1280px-Gold-crystals.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Gold-crystals.jpg/500px-Gold-crystals.jpg","artist":"Alchemist-hp (talk) www.pse-mendelejew.de","license":"CC BY-SA 3.0 de"},{"z":80,"symbol":"Hg","es":"Mercurio","en":"Mercury","x":12,"y":6,"shells":[2,8,18,32,18,2],"family":"transition","mass":200.5923,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Pouring_liquid_mercury_bionerd.jpg/960px-Pouring_liquid_mercury_bionerd.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Pouring_liquid_mercury_bionerd.jpg/500px-Pouring_liquid_mercury_bionerd.jpg","artist":"Bionerd","license":"CC BY 3.0"},{"z":81,"symbol":"Tl","es":"Talio","en":"Thallium","x":13,"y":6,"shells":[2,8,18,32,18,3],"family":"post","mass":204.38,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/8_grams_pure_thallium_under_argon._Original_size_in_cm_-_0.7_x_1.5.jpg/500px-8_grams_pure_thallium_under_argon._Original_size_in_cm_-_0.7_x_1.5.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/8_grams_pure_thallium_under_argon._Original_size_in_cm_-_0.7_x_1.5.jpg/500px-8_grams_pure_thallium_under_argon._Original_size_in_cm_-_0.7_x_1.5.jpg","artist":"Hi-Res Images of Chemical Elements","license":"CC BY 3.0"},{"z":82,"symbol":"Pb","es":"Plomo","en":"Lead","x":14,"y":6,"shells":[2,8,18,32,18,4],"family":"post","mass":207.21,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Lead_electrolytic_and_1cm3_cube.jpg/1280px-Lead_electrolytic_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Lead_electrolytic_and_1cm3_cube.jpg/500px-Lead_electrolytic_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":83,"symbol":"Bi","es":"Bismuto","en":"Bismuth","x":15,"y":6,"shells":[2,8,18,32,18,5],"family":"post","mass":208.980401,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Bismuth_crystals_and_1cm3_cube.jpg/1280px-Bismuth_crystals_and_1cm3_cube.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Bismuth_crystals_and_1cm3_cube.jpg/500px-Bismuth_crystals_and_1cm3_cube.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":84,"symbol":"Po","es":"Polonio","en":"Polonium","x":16,"y":6,"shells":[2,8,18,32,18,6],"family":"post","mass":209,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Polonium_on_brass_sheet.jpg/1280px-Polonium_on_brass_sheet.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Polonium_on_brass_sheet.jpg/500px-Polonium_on_brass_sheet.jpg","artist":"范皓程","license":"CC BY 4.0"},{"z":85,"symbol":"At","es":"Astato","en":"Astatine","x":17,"y":6,"shells":[2,8,18,32,18,7],"family":"metalloid","mass":210,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Glow_from_a_sample_of_astatine_(cropped).jpg/1280px-Glow_from_a_sample_of_astatine_(cropped).jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Glow_from_a_sample_of_astatine_(cropped).jpg/500px-Glow_from_a_sample_of_astatine_(cropped).jpg","artist":"NuclearAlex","license":"CC BY 4.0"},{"z":86,"symbol":"Rn","es":"Radón","en":"Radon","x":18,"y":6,"shells":[2,8,18,32,18,8],"family":"noble","mass":222,"hero":null,"medium":null,"artist":null,"license":null},{"z":87,"symbol":"Fr","es":"Francio","en":"Francium","x":1,"y":7,"shells":[2,8,18,32,18,8,1],"family":"alkali","mass":223,"hero":null,"medium":null,"artist":null,"license":null},{"z":88,"symbol":"Ra","es":"Radio","en":"Radium","x":2,"y":7,"shells":[2,8,18,32,18,8,2],"family":"alkaline","mass":226,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Radium226.jpg/500px-Radium226.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Radium226.jpg/500px-Radium226.jpg","artist":"grenadier","license":"CC BY 3.0"},{"z":89,"symbol":"Ac","es":"Actinio","en":"Actinium","x":3,"y":10,"shells":[2,8,18,32,18,9,2],"family":"actinide","mass":227,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Actinium_sample_(31481701837).png/1280px-Actinium_sample_(31481701837).png","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Actinium_sample_(31481701837).png/500px-Actinium_sample_(31481701837).png","artist":"Oak Ridge National Laboratory","license":"CC BY 2.0"},{"z":90,"symbol":"Th","es":"Torio","en":"Thorium","x":4,"y":10,"shells":[2,8,18,32,18,10,2],"family":"actinide","mass":232.03774,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Thorium_sample_0.1g.jpg/960px-Thorium_sample_0.1g.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Thorium_sample_0.1g.jpg/500px-Thorium_sample_0.1g.jpg","artist":"Alchemist-hp (talk) (www.pse-mendelejew.de)","license":"FAL"},{"z":91,"symbol":"Pa","es":"Protactinio","en":"Protactinium","x":5,"y":10,"shells":[2,8,18,32,20,9,2],"family":"actinide","mass":231.035882,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Protactinium-233.jpg/1280px-Protactinium-233.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Protactinium-233.jpg/500px-Protactinium-233.jpg","artist":"ENERGY.GOV","license":"Public domain"},{"z":92,"symbol":"U","es":"Uranio","en":"Uranium","x":6,"y":10,"shells":[2,8,18,32,21,9,2],"family":"actinide","mass":238.028913,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/HEUraniumC.jpg/1280px-HEUraniumC.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/HEUraniumC.jpg/500px-HEUraniumC.jpg","artist":"Unspecified","license":"Public domain"},{"z":93,"symbol":"Np","es":"Neptunio","en":"Neptunium","x":7,"y":10,"shells":[2,8,18,32,22,9,2],"family":"actinide","mass":237,"hero":"https://upload.wikimedia.org/wikipedia/commons/e/e5/Neptunium2.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/e/e5/Neptunium2.jpg","artist":"Los Alamos National Laboratory,","license":"Public domain"},{"z":94,"symbol":"Pu","es":"Plutonio","en":"Plutonium","x":8,"y":10,"shells":[2,8,18,32,24,8,2],"family":"actinide","mass":244,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Plutonium_ring.jpg/1280px-Plutonium_ring.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Plutonium_ring.jpg/500px-Plutonium_ring.jpg","artist":"Los Alamos National Laboratory","license":"Attribution"},{"z":95,"symbol":"Am","es":"Americio","en":"Americium","x":9,"y":10,"shells":[2,8,18,32,25,8,2],"family":"actinide","mass":243,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Americium_microscope.jpg/960px-Americium_microscope.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Americium_microscope.jpg/500px-Americium_microscope.jpg","artist":"Bionerd","license":"CC BY 3.0"},{"z":96,"symbol":"Cm","es":"Curio","en":"Curium","x":10,"y":10,"shells":[2,8,18,32,25,9,2],"family":"actinide","mass":247,"hero":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Cm-Fluoreszenz.png/1280px-Cm-Fluoreszenz.png","medium":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Cm-Fluoreszenz.png/500px-Cm-Fluoreszenz.png","artist":"Eschenmoser + Kollegen","license":"Public domain"},{"z":97,"symbol":"Bk","es":"Berkelio","en":"Berkelium","x":11,"y":10,"shells":[2,8,18,32,27,8,2],"family":"actinide","mass":247,"hero":"https://upload.wikimedia.org/wikipedia/commons/b/b6/Berkelium_metal.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/b/b6/Berkelium_metal.jpg","artist":"Oak Ridge National Laboratory, US Department of Energy","license":"Public domain"},{"z":98,"symbol":"Cf","es":"Californio","en":"Californium","x":12,"y":10,"shells":[2,8,18,32,28,8,2],"family":"actinide","mass":251,"hero":"https://upload.wikimedia.org/wikipedia/commons/9/93/Californium.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/9/93/Californium.jpg","artist":"United States Department of Energy (see File:Einsteinium.jpg)","license":"Public domain"},{"z":99,"symbol":"Es","es":"Einstenio","en":"Einsteinium","x":13,"y":10,"shells":[2,8,18,32,29,8,2],"family":"actinide","mass":252,"hero":"https://upload.wikimedia.org/wikipedia/commons/5/55/Einsteinium.jpg","medium":"https://upload.wikimedia.org/wikipedia/commons/5/55/Einsteinium.jpg","artist":"Haire, R. G., US Department of Energy. Touched up by Materialscientist at en.wikipedia.","license":"Public domain"},{"z":100,"symbol":"Fm","es":"Fermio","en":"Fermium","x":14,"y":10,"shells":[2,8,18,32,30,8,2],"family":"actinide","mass":257,"hero":null,"medium":null,"artist":null,"license":null},{"z":101,"symbol":"Md","es":"Mendelevio","en":"Mendelevium","x":15,"y":10,"shells":[2,8,18,32,31,8,2],"family":"actinide","mass":258,"hero":null,"medium":null,"artist":null,"license":null},{"z":102,"symbol":"No","es":"Nobelio","en":"Nobelium","x":16,"y":10,"shells":[2,8,18,32,32,8,2],"family":"actinide","mass":259,"hero":null,"medium":null,"artist":null,"license":null},{"z":103,"symbol":"Lr","es":"Lawrencio","en":"Lawrencium","x":17,"y":10,"shells":[2,8,18,32,32,8,3],"family":"actinide","mass":266,"hero":null,"medium":null,"artist":null,"license":null},{"z":104,"symbol":"Rf","es":"Rutherfordio","en":"Rutherfordium","x":4,"y":7,"shells":[2,8,18,32,32,10,2],"family":"transition","mass":267,"hero":null,"medium":null,"artist":null,"license":null},{"z":105,"symbol":"Db","es":"Dubnio","en":"Dubnium","x":5,"y":7,"shells":[2,8,18,32,32,11,2],"family":"transition","mass":268,"hero":null,"medium":null,"artist":null,"license":null},{"z":106,"symbol":"Sg","es":"Seaborgio","en":"Seaborgium","x":6,"y":7,"shells":[2,8,18,32,32,12,2],"family":"transition","mass":269,"hero":null,"medium":null,"artist":null,"license":null},{"z":107,"symbol":"Bh","es":"Bohrio","en":"Bohrium","x":7,"y":7,"shells":[2,8,18,32,32,13,2],"family":"transition","mass":270,"hero":null,"medium":null,"artist":null,"license":null},{"z":108,"symbol":"Hs","es":"Hassio","en":"Hassium","x":8,"y":7,"shells":[2,8,18,32,32,14,2],"family":"transition","mass":269,"hero":null,"medium":null,"artist":null,"license":null},{"z":109,"symbol":"Mt","es":"Meitnerio","en":"Meitnerium","x":9,"y":7,"shells":[2,8,18,32,32,15,2],"family":"transition","mass":278,"hero":null,"medium":null,"artist":null,"license":null},{"z":110,"symbol":"Ds","es":"Darmstadtio","en":"Darmstadtium","x":10,"y":7,"shells":[2,8,18,32,32,16,2],"family":"transition","mass":281,"hero":null,"medium":null,"artist":null,"license":null},{"z":111,"symbol":"Rg","es":"Roentgenio","en":"Roentgenium","x":11,"y":7,"shells":[2,8,18,32,32,17,2],"family":"transition","mass":282,"hero":null,"medium":null,"artist":null,"license":null},{"z":112,"symbol":"Cn","es":"Copernicio","en":"Copernicium","x":12,"y":7,"shells":[2,8,18,32,32,18,2],"family":"transition","mass":285,"hero":null,"medium":null,"artist":null,"license":null},{"z":113,"symbol":"Nh","es":"Nihonio","en":"Nihonium","x":13,"y":7,"shells":[2,8,18,32,32,18,3],"family":"post","mass":286,"hero":null,"medium":null,"artist":null,"license":null},{"z":114,"symbol":"Fl","es":"Flerovio","en":"Flerovium","x":14,"y":7,"shells":[2,8,18,32,32,18,4],"family":"post","mass":289,"hero":null,"medium":null,"artist":null,"license":null},{"z":115,"symbol":"Mc","es":"Moscovio","en":"Moscovium","x":15,"y":7,"shells":[2,8,18,32,32,18,5],"family":"post","mass":289,"hero":null,"medium":null,"artist":null,"license":null},{"z":116,"symbol":"Lv","es":"Livermorio","en":"Livermorium","x":16,"y":7,"shells":[2,8,18,32,32,18,6],"family":"post","mass":293,"hero":null,"medium":null,"artist":null,"license":null},{"z":117,"symbol":"Ts","es":"Teneso","en":"Tennessine","x":17,"y":7,"shells":[2,8,18,32,32,18,7],"family":"metalloid","mass":294,"hero":null,"medium":null,"artist":null,"license":null},{"z":118,"symbol":"Og","es":"Oganesón","en":"Oganesson","x":18,"y":7,"shells":[2,8,18,32,32,18,8],"family":"noble","mass":294,"hero":null,"medium":null,"artist":null,"license":null}]};
+</script>
+<script>
+(() => {
+'use strict';
+if (!window.THREE || !window.MATERIA) return;
+const M = window.MATERIA;
+const ELS = M.elements;
+const FAM = M.FAMILY_COLOR;
+const Q = new URLSearchParams(location.search);
+const SIMPLE = Q.get('simple') === '1';
+const REDUCED = Q.get('motion') === '0' || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const SHOW_FPS = Q.get('fps') === '1';
+if (REDUCED) document.documentElement.classList.add('reduced');
+
+const FAM_ES = {
+  alkali: 'Metal alcalino', alkaline: 'Alcalinotérreo', transition: 'Metal de transición', post: 'Metal del bloque p',
+  metalloid: 'Metaloide', nonmetal: 'No metal', halogen: 'Halógeno', noble: 'Gas noble',
+  lanthanide: 'Lantánido', actinide: 'Actínido', unknown: 'Sin clasificar',
+};
+
+// ---- geometry of the case -------------------------------------------------
+const S = 0.92;            // face size of one vitrine (pitch = 1)
+const DEPTH = 0.9;         // depth of the case
+const ATOM_Z = -DEPTH / 2; // where the atom floats
+const COLS = 18, ROWS = 9.4, MARGIN = 10, KEEP = 56, FOV = 36;
+const DIVE_S = 3.2;        // seconds for the whole dive
+const ROW_LIST = [1, 2, 3, 4, 5, 6, 7, 9, 10];
+const rowPos = (y) => (y <= 7 ? y - 1 : y - 1.6);
+const worldX = (x) => x - 9.5;
+const worldY = (y) => ROWS / 2 - 0.5 - rowPos(y);
+const DEG = Math.PI / 180;
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
+const smooth = (v) => { v = clamp01(v); return v * v * (3 - 2 * v); };
+const easeInOut = (v) => { v = clamp01(v); return v < 0.5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2; };
+const frac = (v) => v - Math.floor(v);
+function hexRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+const nucleusRadius = (e) => 0.045 + 0.03 * Math.cbrt(e.z / 118);
+const electronsOf = (e) => e.shells.reduce((a, b) => a + b, 0);
+
+const byPos = new Map();
+for (const e of ELS) { e.bx = worldX(e.x); e.by = worldY(e.y); e.rgb = hexRgb(FAM[e.family] || FAM.unknown); byPos.set(e.x * 100 + e.y, e); }
+
+// ---- renderer -------------------------------------------------------------
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+renderer.setClearColor(0x000000, 0);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(FOV, 1, 0.02, 120);
+let vw = 1, vh = 1, tilePx = 100;
+
+// shared uniforms: one object per uniform, referenced by every material
+const U = {
+  uTime: { value: 0 },
+  uSel: { value: new THREE.Vector3(999, 999, 999) },
+  uSelAmt: { value: 0 },
+  uHover: { value: new THREE.Vector3(999, 999, 999) },
+  uHoverAmt: { value: 0 },
+  uLift: { value: 0 },
+  uBloom: { value: 0 },
+  uPx: { value: 0.001 },
+  uSimple: { value: SIMPLE ? 1 : 0 },
+  uLight: { value: new THREE.Vector3(0.15, 0.85, 0.5).normalize() },
+  uLight2: { value: new THREE.Vector3(-0.75, 0.35, 0.56).normalize() },
+};
+const uniformsWith = (own) => Object.assign({}, U, own || {});
+
+const COMMON_V = `
+uniform vec3 uSel; uniform float uSelAmt; uniform vec3 uHover; uniform float uHoverAmt;
+uniform float uLift; uniform float uTime; uniform float uBloom; uniform float uPx;
+attribute vec3 aCenter; attribute vec3 aColor;
+float isAt(vec3 c, vec3 p) { return 1.0 - step(0.02, distance(c, p)); }
+`;
+
+// ---- glass body: five faces, front open ------------------------------------
+function bodyGeometry() {
+  const box = new THREE.BoxGeometry(S, S, DEPTH);
+  box.translate(0, 0, -DEPTH / 2);
+  const idx = box.getIndex().array, nrm = box.getAttribute('normal');
+  const keep = [];
+  for (let i = 0; i < idx.length; i += 3) {
+    const a = idx[i], b = idx[i + 1], c = idx[i + 2];
+    if (nrm.getZ(a) > 0.5 && nrm.getZ(b) > 0.5 && nrm.getZ(c) > 0.5) continue; // drop the front face
+    keep.push(a, b, c);
+  }
+  box.setIndex(keep);
+  box.clearGroups();
+  return box;
+}
+const bodyMat = new THREE.ShaderMaterial({
+  uniforms: uniformsWith(),
+  transparent: true, depthWrite: false, side: THREE.DoubleSide,
+  vertexShader: COMMON_V + `
+varying vec3 vN, vW, vL, vColor; varying float vSel, vHov;
+void main() {
+  vSel = uSelAmt * isAt(aCenter, uSel); vHov = uHoverAmt * isAt(aCenter, uHover);
+  vL = position; vColor = aColor; vN = normal;
+  vec4 w = instanceMatrix * vec4(position, 1.0); w.z += uLift * vSel; vW = w.xyz;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`,
+  fragmentShader: `
+precision highp float;
+varying vec3 vN, vW, vL, vColor; varying float vSel, vHov;
+void main() {
+  vec3 v = normalize(cameraPosition - vW); vec3 n = normalize(vN);
+  float f = pow(1.0 - abs(dot(n, v)), 2.5);
+  vec3 glass = mix(vec3(0.70, 0.80, 0.92), vColor, 0.22);
+  vec3 col; float a;
+  if (n.y < -0.5) {
+    // the plinth: dark floor with the atom's warm reflection
+    vec2 q = vec2(vL.x, vL.z + 0.45); float d = length(q) / 0.42; float glow = exp(-d * d * 3.4);
+    vec3 warm = mix(vec3(1.0, 0.78, 0.50), vColor, 0.55);
+    col = vec3(0.075, 0.08, 0.09) + warm * glow * (0.34 + 0.30 * vHov + 0.45 * vSel);
+    col += vec3(0.08, 0.085, 0.1) * smoothstep(0.1, 0.45, vL.z + 0.9) * 0.4;
+    a = 0.92;
+  } else if (n.z < -0.5) {
+    // back wall, lit softly from above
+    float h = (vL.y + 0.46) / 0.92;
+    col = mix(vec3(0.06, 0.065, 0.08), vec3(0.17, 0.18, 0.21), h) + vColor * 0.06 * vSel;
+    a = 0.30 + 0.12 * h + 0.08 * f;
+  } else {
+    col = glass; a = 0.035 + 0.38 * f;
+    if (n.y > 0.5) { a += 0.05; col = mix(col, vec3(1.0, 0.95, 0.85), 0.35); }
+  }
+  col += vColor * (0.10 * vHov + 0.16 * vSel) * (0.5 + f);
+  a = min(1.0, a * (1.0 + 0.3 * vHov + 0.4 * vSel));
+  gl_FragColor = vec4(col, a);
+}`,
+});
+
+// ---- the door: front pane with its own outline, glint, hinge on the left -----
+const doorMat = new THREE.ShaderMaterial({
+  uniforms: uniformsWith(),
+  transparent: true, depthWrite: false, side: THREE.DoubleSide, premultipliedAlpha: true,
+  extensions: { derivatives: true },
+  vertexShader: COMMON_V + `
+varying vec2 vUv; varying vec3 vN, vW, vColor; varying float vSel, vHov;
+void main() {
+  vSel = uSelAmt * isAt(aCenter, uSel); vHov = uHoverAmt * isAt(aCenter, uHover);
+  vUv = uv; vColor = aColor; vN = normalize(mat3(instanceMatrix) * normal);
+  vec4 w = instanceMatrix * vec4(position, 1.0); w.z += uLift * vSel; vW = w.xyz;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`,
+  fragmentShader: `
+precision highp float;
+uniform vec3 uLight, uLight2; uniform float uTime;
+varying vec2 vUv; varying vec3 vN, vW, vColor; varying float vSel, vHov;
+void main() {
+  vec3 v = normalize(cameraPosition - vW); vec3 n = normalize(vN); if (dot(n, v) < 0.0) n = -n;
+  float ndv = max(dot(n, v), 0.0); float f = pow(1.0 - ndv, 3.0);
+  vec3 r = reflect(-v, n);
+  float g1 = pow(max(dot(r, uLight), 0.0), 36.0);
+  float g2 = pow(max(dot(r, uLight2), 0.0), 90.0);
+  float b = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+  float pw = fwidth(b); float line = 1.0 - smoothstep(pw * 0.5, pw * 1.7, b);
+  vec3 edge = mix(vec3(0.92, 0.94, 0.98), vColor, 0.45 + 0.25 * vSel);
+  float edgeA = (0.40 + 0.45 * vHov + 0.55 * vSel) * line;
+  vec3 glass = mix(vec3(0.72, 0.80, 0.92), vColor, 0.2);
+  float sheen = exp(-pow((vUv.x + vUv.y - 1.0 - 0.15 * sin(uTime * 0.8)) * 2.4, 2.0)) * 0.07 * vHov;
+  float a = 0.02 + 0.30 * f + sheen + 0.05 * vSel;
+  vec3 col = glass * a + vec3(1.0, 0.96, 0.88) * (g1 * 0.45 + g2 * 0.95) + edge * edgeA;
+  a = min(1.0, a + g1 * 0.45 + g2 * 0.95 + edgeA);
+  gl_FragColor = vec4(col, a);
+}`,
+});
+
+// ---- the symbol etched on the glass -----------------------------------------
+const ATLAS_COLS = 12, ATLAS_ROWS = 10, CELL = 128;
+const atlasCanvas = document.createElement('canvas');
+atlasCanvas.width = ATLAS_COLS * CELL; atlasCanvas.height = ATLAS_ROWS * CELL;
+const atlasTex = new THREE.CanvasTexture(atlasCanvas);
+atlasTex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+atlasTex.minFilter = THREE.LinearMipmapLinearFilter;
+function drawAtlas() {
+  const ctx = atlasCanvas.getContext('2d');
+  ctx.clearRect(0, 0, atlasCanvas.width, atlasCanvas.height);
+  ctx.fillStyle = '#ffffff';
+  ELS.forEach((e, i) => {
+    const cx = (i % ATLAS_COLS) * CELL, cy = Math.floor(i / ATLAS_COLS) * CELL;
+    ctx.globalAlpha = 0.7; ctx.font = '500 22px "Segoe UI", system-ui, -apple-system, sans-serif'; ctx.textBaseline = 'top';
+    ctx.fillText(String(e.z), cx + 12, cy + 12);
+    ctx.globalAlpha = 1; ctx.font = '600 62px "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(e.symbol, cx + 10, cy + CELL - 22);
+  });
+  atlasTex.needsUpdate = true;
+}
+drawAtlas(); // local system fonts only: no web fonts, so the atlas is final on the first draw
+const labelMat = new THREE.ShaderMaterial({
+  uniforms: uniformsWith({ uAtlas: { value: atlasTex }, uCell: { value: new THREE.Vector2(1 / ATLAS_COLS, 1 / ATLAS_ROWS) } }),
+  transparent: true, depthWrite: false, premultipliedAlpha: true,
+  vertexShader: COMMON_V + `
+attribute vec2 aCell; uniform vec2 uCell;
+varying vec2 vUv; varying float vSel, vHov;
+void main() {
+  vSel = uSelAmt * isAt(aCenter, uSel); vHov = uHoverAmt * isAt(aCenter, uHover);
+  vUv = aCell + uv * uCell;
+  vec4 w = instanceMatrix * vec4(position, 1.0); w.z += uLift * vSel;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`,
+  fragmentShader: `
+precision highp float;
+uniform sampler2D uAtlas; varying vec2 vUv; varying float vSel, vHov;
+void main() {
+  float t = texture2D(uAtlas, vUv).a;
+  float a = t * (0.66 + 0.26 * vHov + 0.34 * vSel);
+  gl_FragColor = vec4(vec3(0.96, 0.94, 0.89) * a, a);
+}`,
+});
+
+// ---- nucleus ------------------------------------------------------------------
+const nucleusMat = new THREE.ShaderMaterial({
+  uniforms: uniformsWith(),
+  vertexShader: COMMON_V + `
+varying vec3 vN, vW, vColor; varying float vSel;
+void main() {
+  vSel = uSelAmt * isAt(aCenter, uSel); float hov = uHoverAmt * isAt(aCenter, uHover);
+  vColor = aColor;
+  float pulse = 1.0 + 0.05 * sin(uTime * 2.3 + aCenter.x * 3.1 + aCenter.y * 1.7) + 0.08 * hov;
+  vec4 w = instanceMatrix * vec4(position * pulse * (1.0 + 0.9 * uBloom * vSel), 1.0); w.z += uLift * vSel; vW = w.xyz;
+  vN = normalize(mat3(instanceMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`,
+  fragmentShader: `
+precision highp float;
+uniform float uBloom; varying vec3 vN, vW, vColor; varying float vSel;
+void main() {
+  vec3 v = normalize(cameraPosition - vW); float ndv = max(dot(normalize(vN), v), 0.0);
+  float rim = pow(1.0 - ndv, 1.6);
+  vec3 warm = vec3(1.0, 0.86, 0.62);
+  vec3 col = mix(warm * 1.12, vColor, rim * 0.72) + 0.3 * pow(ndv, 10.0);
+  col = mix(col, vec3(1.0, 0.98, 0.92), uBloom * vSel);
+  gl_FragColor = vec4(col, 1.0);
+}`,
+});
+
+// ---- billboards: electrons and nucleus halo -----------------------------------
+const BILLBOARD_V = COMMON_V + `
+vec3 camRight() { return vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]); }
+vec3 camUp() { return vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]); }
+`;
+const electronMat = new THREE.ShaderMaterial({
+  uniforms: uniformsWith(),
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, premultipliedAlpha: true,
+  vertexShader: BILLBOARD_V + `
+attribute vec3 aU, aV; attribute vec4 aOrb;
+varying vec2 vUv; varying vec3 vColor; varying float vBoost;
+void main() {
+  float sel = uSelAmt * isAt(aCenter, uSel); float hov = uHoverAmt * isAt(aCenter, uHover);
+  float ang = aOrb.y + aOrb.z * uTime;
+  vec3 c = aCenter + vec3(0.0, 0.0, -0.45 + uLift * sel);
+  vec3 p = c + aOrb.x * (cos(ang) * aU + sin(ang) * aV);
+  float dist = length(cameraPosition - p);
+  float size = max(aOrb.w * (1.0 + 0.35 * hov + 0.25 * sel), 2.2 * uPx * dist);
+  p += (camRight() * position.x + camUp() * position.y) * size;
+  vUv = position.xy; vColor = aColor; vBoost = 1.0 + 0.7 * hov + 0.6 * sel + 1.5 * uBloom * sel;
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`,
+  fragmentShader: `
+precision highp float;
+varying vec2 vUv; varying vec3 vColor; varying float vBoost;
+void main() {
+  float d2 = dot(vUv, vUv); if (d2 > 1.0) discard;
+  float core = exp(-d2 * 16.0); float glow = exp(-d2 * 3.2) * 0.18;
+  float a = (core * 1.15 + glow) * vBoost;
+  vec3 col = mix(vColor, vec3(1.0), core * 0.85);
+  gl_FragColor = vec4(col * a, a);
+}`,
+});
+const haloMat = new THREE.ShaderMaterial({
+  uniforms: uniformsWith(),
+  transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, premultipliedAlpha: true,
+  vertexShader: BILLBOARD_V + `
+attribute float aSize;
+varying vec2 vUv; varying vec3 vColor; varying float vA;
+void main() {
+  float sel = uSelAmt * isAt(aCenter, uSel); float hov = uHoverAmt * isAt(aCenter, uHover);
+  vec3 c = aCenter + vec3(0.0, 0.0, -0.45 + uLift * sel);
+  float size = aSize * (1.0 + 0.45 * hov + 0.3 * sel) * (1.0 + 7.0 * uBloom * sel);
+  vec3 p = c + (camRight() * position.x + camUp() * position.y) * size;
+  vUv = position.xy; vColor = aColor; vA = 0.26 + 0.22 * hov + 0.2 * sel + 1.4 * uBloom * sel;
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`,
+  fragmentShader: `
+precision highp float;
+varying vec2 vUv; varying vec3 vColor; varying float vA;
+void main() {
+  float d2 = dot(vUv, vUv); if (d2 > 1.0) discard;
+  float a = exp(-d2 * 4.2) * vA;
+  vec3 col = mix(vec3(1.0, 0.82, 0.55), vColor, 0.35);
+  gl_FragColor = vec4(col * a, a);
+}`,
+});
+
+// ---- shell rings: one tilted quad per shell, the ring drawn in the fragment ---
+const ringMat = new THREE.ShaderMaterial({
+  uniforms: uniformsWith(),
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, premultipliedAlpha: true, side: THREE.DoubleSide,
+  extensions: { derivatives: true },
+  vertexShader: COMMON_V + `
+attribute vec3 aU, aV; attribute float aRad, aStr;
+varying vec2 vUv; varying vec3 vColor; varying float vStr, vBoost;
+void main() {
+  float sel = uSelAmt * isAt(aCenter, uSel); float hov = uHoverAmt * isAt(aCenter, uHover);
+  vec3 c = aCenter + vec3(0.0, 0.0, -0.45 + uLift * sel);
+  vec3 p = c + (position.x * aU + position.y * aV) * aRad * 1.11;
+  vUv = position.xy; vColor = aColor; vStr = aStr; vBoost = 1.0 + 0.8 * hov + 0.7 * sel;
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`,
+  fragmentShader: `
+precision highp float;
+uniform float uSimple;
+varying vec2 vUv; varying vec3 vColor; varying float vStr, vBoost;
+void main() {
+  float d = length(vUv); float t = abs(d - 0.9); float w = fwidth(d);
+  float hw = w * (0.55 + 1.3 * vStr + 0.4 * uSimple);
+  float a = 1.0 - smoothstep(hw, hw + w, t);
+  a *= (0.16 + 0.5 * vStr + 0.2 * uSimple) * vBoost;
+  vec3 col = mix(vec3(0.62, 0.72, 0.88), vColor, 0.35);
+  gl_FragColor = vec4(col * a, a);
+}`,
+});
+
+// ---- edges of the case (the 8 edges that do not belong to the door) -----------
+const edgeMat = new THREE.ShaderMaterial({
+  uniforms: uniformsWith(),
+  transparent: true, depthWrite: false, premultipliedAlpha: true,
+  vertexShader: COMMON_V + `
+varying vec3 vColor; varying float vA;
+void main() {
+  float sel = uSelAmt * isAt(aCenter, uSel); float hov = uHoverAmt * isAt(aCenter, uHover);
+  vec3 p = position; p.z += uLift * sel;
+  vColor = mix(aColor, vec3(1.0), 0.3 * hov + 0.4 * sel); vA = 0.26 + 0.45 * hov + 0.6 * sel;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+}`,
+  fragmentShader: `
+precision highp float;
+varying vec3 vColor; varying float vA;
+void main() { gl_FragColor = vec4(vColor * vA, vA); }`,
+});
+
+// ---- build the table ------------------------------------------------------------
+const N = ELS.length;
+const m4 = new THREE.Matrix4();
+const centers = new Float32Array(N * 3), colors = new Float32Array(N * 3);
+ELS.forEach((e, i) => { centers.set([e.bx, e.by, 0], i * 3); colors.set(e.rgb, i * 3); });
+function addInstanceAttrs(geo) {
+  geo.setAttribute('aCenter', new THREE.InstancedBufferAttribute(centers, 3));
+  geo.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
+}
+
+const bodyGeo = bodyGeometry(); addInstanceAttrs(bodyGeo);
+const bodies = new THREE.InstancedMesh(bodyGeo, bodyMat, N);
+ELS.forEach((e, i) => bodies.setMatrixAt(i, m4.makeTranslation(e.bx, e.by, 0)));
+bodies.renderOrder = 1; bodies.frustumCulled = false; scene.add(bodies);
+
+const doorGeo = new THREE.PlaneGeometry(S, S); addInstanceAttrs(doorGeo);
+const doors = new THREE.InstancedMesh(doorGeo, doorMat, N);
+doors.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+doors.renderOrder = 6; doors.frustumCulled = false; scene.add(doors);
+
+const LABEL = 0.40;
+const labelGeo = new THREE.PlaneGeometry(1, 1); addInstanceAttrs(labelGeo);
+const cells = new Float32Array(N * 2);
+ELS.forEach((e, i) => { cells[i * 2] = (i % ATLAS_COLS) / ATLAS_COLS; cells[i * 2 + 1] = 1 - (Math.floor(i / ATLAS_COLS) + 1) / ATLAS_ROWS; });
+labelGeo.setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 2));
+const labels = new THREE.InstancedMesh(labelGeo, labelMat, N);
+labels.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+labels.renderOrder = 5; labels.frustumCulled = false; scene.add(labels);
+const labelLocal = new THREE.Matrix4().makeTranslation(-S / 2 + 0.03 + LABEL / 2, -S / 2 + 0.03 + LABEL / 2, 0.006).multiply(new THREE.Matrix4().makeScale(LABEL, LABEL, 1));
+
+function setDoorPose(i, e, angle) {
+  // hinge on the left edge of the pane; angle 0 closed, negative opens outward (toward the viewer)
+  const hinge = new THREE.Matrix4().makeTranslation(e.bx - S / 2, e.by, 0);
+  const rot = new THREE.Matrix4().makeRotationY(angle);
+  const back = new THREE.Matrix4().makeTranslation(S / 2, 0, 0);
+  const door = hinge.multiply(rot).multiply(back);
+  doors.setMatrixAt(i, door);
+  labels.setMatrixAt(i, door.clone().multiply(labelLocal));
+  doors.instanceMatrix.needsUpdate = true; labels.instanceMatrix.needsUpdate = true;
+}
+ELS.forEach((e, i) => setDoorPose(i, e, 0));
+
+const nucleusGeo = new THREE.IcosahedronGeometry(1, 2); addInstanceAttrs(nucleusGeo);
+const nuclei = new THREE.InstancedMesh(nucleusGeo, nucleusMat, N);
+ELS.forEach((e, i) => { const r = nucleusRadius(e); nuclei.setMatrixAt(i, m4.makeTranslation(e.bx, e.by, ATOM_Z).multiply(new THREE.Matrix4().makeScale(r, r, r))); });
+nuclei.frustumCulled = false; scene.add(nuclei);
+
+// edges: 8 per case
+{
+  const pos = new Float32Array(N * 16 * 3), ec = new Float32Array(N * 16 * 3), ecol = new Float32Array(N * 16 * 3);
+  let k = 0;
+  const put = (e, x, y, z) => { pos.set([x, y, z], k * 3); ec.set([e.bx, e.by, 0], k * 3); ecol.set([e.rgb[0] * 0.5 + 0.45, e.rgb[1] * 0.5 + 0.48, e.rgb[2] * 0.5 + 0.52], k * 3); k++; };
+  for (const e of ELS) {
+    const h = S / 2, x0 = e.bx - h, x1 = e.bx + h, y0 = e.by - h, y1 = e.by + h, z = -DEPTH;
+    put(e, x0, y0, z); put(e, x1, y0, z); put(e, x1, y0, z); put(e, x1, y1, z);
+    put(e, x1, y1, z); put(e, x0, y1, z); put(e, x0, y1, z); put(e, x0, y0, z);
+    put(e, x0, y0, 0); put(e, x0, y0, z); put(e, x1, y0, 0); put(e, x1, y0, z);
+    put(e, x1, y1, 0); put(e, x1, y1, z); put(e, x0, y1, 0); put(e, x0, y1, z);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('aCenter', new THREE.BufferAttribute(ec, 3));
+  g.setAttribute('aColor', new THREE.BufferAttribute(ecol, 3));
+  const lines = new THREE.LineSegments(g, edgeMat);
+  lines.renderOrder = 1; lines.frustumCulled = false; scene.add(lines);
+}
+
+// atoms: shells from the data; Z <= 36 every electron, above that 12 beads per shell plus a ring that carries the count
+const quad = new THREE.PlaneGeometry(2, 2);
+function instancedQuad(count) {
+  const g = new THREE.InstancedBufferGeometry();
+  g.setIndex(quad.getIndex()); g.setAttribute('position', quad.getAttribute('position')); g.setAttribute('uv', quad.getAttribute('uv'));
+  g.instanceCount = count; return g;
+}
+const eC = [], eU = [], eV = [], eOrb = [], eCol = [];
+const rC = [], rU = [], rV = [], rRad = [], rStr = [], rCol = [];
+let electronInstances = 0;
+for (const e of ELS) {
+  const K = e.shells.length, h1 = frac(e.z * 0.6180339887), h2 = frac(e.z * 0.7548776662);
+  for (let k = 0; k < K; k++) {
+    const n = e.shells[k];
+    const draw = e.z <= 36 ? n : Math.min(12, n);
+    const r = K === 1 ? 0.24 : 0.11 + 0.29 * (k / (K - 1));
+    const tilt = (k % 2 ? -1 : 1) * Math.min(62, 12 + 11 * k) * DEG;
+    const roll = k * 31 * DEG + h1 * Math.PI * 2;
+    const Ux = Math.cos(roll), Uy = Math.sin(roll), Uz = 0;
+    const Vx = -Math.sin(roll) * Math.cos(tilt), Vy = Math.cos(roll) * Math.cos(tilt), Vz = Math.sin(tilt);
+    rC.push(e.bx, e.by, 0); rU.push(Ux, Uy, Uz); rV.push(Vx, Vy, Vz); rRad.push(r); rStr.push(n / 32); rCol.push(...e.rgb);
+    if (SIMPLE) continue;
+    const speed = (2.1 / Math.pow(k + 1, 0.6)) * (0.85 + 0.3 * h2) * (k % 3 === 2 ? -1 : 1);
+    const size = e.z <= 36 ? 0.05 : 0.04;
+    for (let i = 0; i < draw; i++) {
+      eC.push(e.bx, e.by, 0); eU.push(Ux, Uy, Uz); eV.push(Vx, Vy, Vz);
+      eOrb.push(r, (i / draw) * Math.PI * 2 + h2 * 6.283, speed, size); eCol.push(...e.rgb);
+      electronInstances++;
+    }
+  }
+}
+{
+  const g = instancedQuad(rRad.length);
+  g.setAttribute('aCenter', new THREE.InstancedBufferAttribute(new Float32Array(rC), 3));
+  g.setAttribute('aColor', new THREE.InstancedBufferAttribute(new Float32Array(rCol), 3));
+  g.setAttribute('aU', new THREE.InstancedBufferAttribute(new Float32Array(rU), 3));
+  g.setAttribute('aV', new THREE.InstancedBufferAttribute(new Float32Array(rV), 3));
+  g.setAttribute('aRad', new THREE.InstancedBufferAttribute(new Float32Array(rRad), 1));
+  g.setAttribute('aStr', new THREE.InstancedBufferAttribute(new Float32Array(rStr), 1));
+  const rings = new THREE.Mesh(g, ringMat); rings.renderOrder = 2; rings.frustumCulled = false; scene.add(rings);
+}
+if (!SIMPLE) {
+  const g = instancedQuad(electronInstances);
+  g.setAttribute('aCenter', new THREE.InstancedBufferAttribute(new Float32Array(eC), 3));
+  g.setAttribute('aColor', new THREE.InstancedBufferAttribute(new Float32Array(eCol), 3));
+  g.setAttribute('aU', new THREE.InstancedBufferAttribute(new Float32Array(eU), 3));
+  g.setAttribute('aV', new THREE.InstancedBufferAttribute(new Float32Array(eV), 3));
+  g.setAttribute('aOrb', new THREE.InstancedBufferAttribute(new Float32Array(eOrb), 4));
+  const electrons = new THREE.Mesh(g, electronMat); electrons.renderOrder = 3; electrons.frustumCulled = false; scene.add(electrons);
+}
+{
+  const g = instancedQuad(N);
+  const sizes = new Float32Array(N); ELS.forEach((e, i) => { sizes[i] = nucleusRadius(e) * 4.2; });
+  g.setAttribute('aCenter', new THREE.InstancedBufferAttribute(centers, 3));
+  g.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
+  g.setAttribute('aSize', new THREE.InstancedBufferAttribute(sizes, 1));
+  const halos = new THREE.Mesh(g, haloMat); halos.renderOrder = 4; halos.frustumCulled = false; scene.add(halos);
+}
+
+// ---- camera: fit the whole table, keep the corners free -------------------------
+const base = { pos: new THREE.Vector3(0, 0, 20), target: new THREE.Vector3(0, 0, 0), fov: FOV };
+const tanH = () => Math.tan((FOV / 2) * DEG);
+function fit() {
+  vw = window.innerWidth; vh = window.innerHeight;
+  renderer.setSize(vw, vh, false);
+  camera.aspect = vw / vh;
+  // option A keeps the top corners free with a top inset; option B with side insets; take the bigger tile
+  const tA = Math.min((vw - 2 * MARGIN) / COLS, (vh - MARGIN - (MARGIN + KEEP)) / ROWS);
+  const tB = Math.min((vw - 2 * (MARGIN + KEEP)) / COLS, (vh - 2 * MARGIN) / ROWS);
+  let left, top;
+  if (tA >= tB) {
+    tilePx = tA; left = (vw - COLS * tilePx) / 2;
+    top = MARGIN + KEEP + (vh - 2 * MARGIN - KEEP - ROWS * tilePx) / 2;
+  } else {
+    tilePx = tB; top = (vh - ROWS * tilePx) / 2;
+    left = MARGIN + KEEP + (vw - 2 * (MARGIN + KEEP) - COLS * tilePx) / 2;
+  }
+  const cxPx = left + (COLS * tilePx) / 2, cyPx = top + (ROWS * tilePx) / 2;
+  const ax = (vw / 2 - cxPx) / tilePx, ay = (cyPx - vh / 2) / tilePx; // grid center is the world origin
+  const d = (vh / tilePx / 2) / tanH();
+  base.pos.set(ax, ay, d); base.target.set(ax, ay, 0); base.fov = FOV;
+  if (dive.el) computeDiveKeys(dive.el);
+}
+function applyCamera(pos, target, fov) {
+  camera.position.copy(pos); camera.lookAt(target);
+  if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; }
+  camera.updateProjectionMatrix();
+  U.uPx.value = (2 * Math.tan((camera.fov / 2) * DEG)) / vh;
+}
+
+// ---- picking (straight-on view: a ray to the z = 0 plane, then the grid) --------
+const tmpV = new THREE.Vector3();
+function worldAt(px, py) {
+  tmpV.set((px / vw) * 2 - 1, -((py / vh) * 2 - 1), 0.5).unproject(camera);
+  const o = camera.position, dx = tmpV.x - o.x, dy = tmpV.y - o.y, dz = tmpV.z - o.z;
+  if (Math.abs(dz) < 1e-6) return null;
+  const t = -o.z / dz; if (t < 0) return null;
+  return [o.x + dx * t, o.y + dy * t];
+}
+function hitAt(px, py) {
+  const w = worldAt(px, py); if (!w) return null;
+  const x = Math.round(w[0] + 9.5); if (x < 1 || x > 18 || Math.abs(w[0] - worldX(x)) > S / 2) return null;
+  for (const y of ROW_LIST) if (Math.abs(w[1] - worldY(y)) <= S / 2) return byPos.get(x * 100 + y) || null;
+  return null;
+}
+
+// ---- DOM --------------------------------------------------------------------------
+const $ = (id) => document.getElementById(id);
+const tip = $('tip'), tipName = $('tipName'), tipMeta = $('tipMeta');
+const card = $('card'), heroImg = $('heroImg'), credit = $('credit'), noPhoto = $('noPhoto');
+const bloomEl = $('bloom'), deck = $('deck'), help = $('help'), fpsEl = $('fps');
+if (SHOW_FPS) fpsEl.hidden = false;
+
+let hover = null, hoverAmt = 0, sel = null, selAmt = 0, keyboardFocus = false;
+const dive = { t: 0, dir: 0, el: null, keys: null, t0: 0, tStart: 0 }; // t0/tStart: wall-clock anchor so the dive lasts DIVE_S whatever the frame rate
+let deckOn = false;
+
+function setHover(e) {
+  if (hover === e) return;
+  hover = e;
+  if (e) {
+    U.uHover.value.set(e.bx, e.by, 0);
+    hoverAmt = Math.min(hoverAmt, 0.35);
+    tip.style.setProperty('--fam', FAM[e.family] || FAM.unknown);
+    tipName.textContent = e.es;
+    const total = electronsOf(e);
+    tipMeta.innerHTML = `<em>${e.symbol}</em> · Z ${e.z} · ${total} electrones · ${e.shells.join(' · ')}`;
+    tip.classList.add('on');
+    placeTip();
+  } else {
+    tip.classList.remove('on');
+  }
+}
+function placeTip() {
+  if (!hover) return;
+  tmpV.set(hover.bx, hover.by + S / 2 + 0.04, 0.06).project(camera);
+  const sx = ((tmpV.x + 1) / 2) * vw, sy = ((1 - tmpV.y) / 2) * vh;
+  const above = sy > 110;
+  tip.style.transform = above ? 'translate(-50%, -100%)' : 'translate(-50%, 0)';
+  tip.style.left = Math.max(90, Math.min(vw - 90, sx)) + 'px';
+  tip.style.top = (above ? sy - 8 : sy + tilePx + 6) + 'px';
+}
+function fillCard(e) {
+  const fam = FAM[e.family] || FAM.unknown;
+  card.style.setProperty('--fam', fam); deck.style.setProperty('--fam', fam);
+  $('cZ').textContent = 'Z ' + e.z; $('cFam').textContent = FAM_ES[e.family] || FAM_ES.unknown;
+  $('cName').textContent = e.es; $('cSym').textContent = e.symbol; $('cMass').textContent = 'masa ' + e.mass + ' u';
+  $('cShells').textContent = 'Electrones por capa: ' + e.shells.join(' · ') + '  —  ' + electronsOf(e) + ' e⁻';
+  $('dZ').textContent = 'Z ' + e.z; $('dFam').textContent = FAM_ES[e.family] || FAM_ES.unknown;
+  $('dName').textContent = e.es; $('dSym').textContent = e.symbol; $('dMass').textContent = 'masa ' + e.mass + ' u';
+  $('dShells').textContent = e.shells.join(' · ') + ' · ' + electronsOf(e) + ' e⁻';
+  // hero with the medium size as fallback; the credit comes from the data
+  heroImg.classList.remove('ok'); heroImg.removeAttribute('src'); noPhoto.hidden = true; credit.textContent = '';
+  if (e.hero || e.medium) {
+    let triedMedium = !e.medium || e.hero === e.medium;
+    const creditText = e.artist ? (e.license ? e.artist + ' · ' + e.license : e.artist) : '';
+    // the credit appears only when a photo is actually on screen, and goes away with it
+    heroImg.onload = () => { heroImg.classList.add('ok'); credit.textContent = creditText; };
+    heroImg.onerror = () => { if (!triedMedium) { triedMedium = true; heroImg.src = e.medium; } else { noPhoto.hidden = false; credit.textContent = ''; } };
+    heroImg.src = e.hero || e.medium;
+    heroImg.alt = e.es;
+  } else {
+    noPhoto.hidden = false;
+  }
+}
+function select(e) {
+  if (!e) return;
+  if (sel === e && card.classList.contains('open')) return;
+  sel = e; U.uSel.value.set(e.bx, e.by, 0); selAmt = Math.min(selAmt, 0.4);
+  fillCard(e);
+  const side = e.x <= 9 ? 'right' : 'left';
+  card.classList.remove('right', 'left'); card.classList.add(side, 'open');
+  card.setAttribute('aria-hidden', 'false');
+  help.classList.add('off');
+}
+function closeCard() {
+  if (!sel) return;
+  sel = null; card.classList.remove('open'); card.setAttribute('aria-hidden', 'true');
+}
+
+// ---- the dive: one timeline parameter, run forward to enter and backward to return ----
+function monotone(ts, vs) {
+  const n = ts.length, d = [], m = new Array(n).fill(0);
+  for (let i = 0; i < n - 1; i++) d.push((vs[i + 1] - vs[i]) / (ts[i + 1] - ts[i]));
+  for (let i = 1; i < n - 1; i++) {
+    if (d[i - 1] * d[i] <= 0) { m[i] = 0; continue; }
+    const h0 = ts[i] - ts[i - 1], h1 = ts[i + 1] - ts[i];
+    m[i] = (3 * (h0 + h1)) / ((2 * h1 + h0) / d[i - 1] + (h1 + 2 * h0) / d[i]);
+  }
+  m[0] = 0; m[n - 1] = 0; // the camera eases out of the table and into the nucleus
+  return (t) => {
+    if (t <= ts[0]) return vs[0]; if (t >= ts[n - 1]) return vs[n - 1];
+    let i = 0; while (t > ts[i + 1]) i++;
+    const h = ts[i + 1] - ts[i], s = (t - ts[i]) / h, s2 = s * s, s3 = s2 * s;
+    return (2 * s3 - 3 * s2 + 1) * vs[i] + (s3 - 2 * s2 + s) * h * m[i] + (-2 * s3 + 3 * s2) * vs[i + 1] + (s3 - s2) * h * m[i + 1];
+  };
+}
+function computeDiveKeys(e) {
+  const aspect = vw / vh;
+  const d1 = (S / 0.6 / 2) / (tanH() * Math.min(1, aspect)); // the case fills ~60% of the shorter side
+  const nr = nucleusRadius(e);
+  const ts = [0, 0.36, 0.56, 0.82];
+  const P = [base.pos, new THREE.Vector3(e.bx, e.by, d1), new THREE.Vector3(e.bx + 0.08, e.by + 0.02, d1 * 0.86), new THREE.Vector3(e.bx, e.by, ATOM_Z + nr + 0.035)];
+  const T = [base.target, new THREE.Vector3(e.bx, e.by, ATOM_Z * 0.3), new THREE.Vector3(e.bx, e.by, ATOM_Z), new THREE.Vector3(e.bx, e.by, ATOM_Z)];
+  const F = [FOV, FOV, FOV + 2, 54];
+  const ch = (arr, k) => monotone(ts, arr.map((v) => v[k]));
+  dive.keys = { px: ch(P, 'x'), py: ch(P, 'y'), pz: ch(P, 'z'), tx: ch(T, 'x'), ty: ch(T, 'y'), tz: ch(T, 'z'), fov: monotone(ts, F) };
+}
+const dPos = new THREE.Vector3(), dTgt = new THREE.Vector3();
+const last = { card: -1, bloom: -1, deck: -1, door: 999 };
+function applyDive(t) {
+  const k = dive.keys, e = dive.el; if (!k || !e) return;
+  dPos.set(k.px(t), k.py(t), k.pz(t)); dTgt.set(k.tx(t), k.ty(t), k.tz(t));
+  applyCamera(dPos, dTgt, k.fov(t));
+  U.uLift.value = 0.05 * (1 - smooth(t / 0.2));
+  const door = easeInOut((t - 0.34) / 0.24);
+  const angle = -door * 100 * DEG;
+  if (angle !== last.door) { setDoorPose(ELS.indexOf(e), e, angle); last.door = angle; }
+  const bloom = smooth((t - 0.66) / 0.18);
+  U.uBloom.value = bloom;
+  const cardA = 1 - smooth(t / 0.18);
+  if (cardA !== last.card) { card.style.opacity = cardA; card.style.pointerEvents = cardA < 0.5 ? 'none' : ''; last.card = cardA; }
+  const bloomA = bloom * (1 - smooth((t - 0.9) / 0.1));
+  if (bloomA !== last.bloom) { bloomEl.style.opacity = bloomA; bloomEl.style.transform = 'scale(' + (0.55 + 0.9 * bloom) + ')'; last.bloom = bloomA; }
+  const deckA = smooth((t - 0.82) / 0.1);
+  if (deckA !== last.deck) { deck.style.opacity = deckA; last.deck = deckA; }
+}
+function startDive(e) {
+  if (!e || dive.dir || deckOn) return;
+  if (sel !== e) select(e);
+  setHover(null);
+  dive.el = e; computeDiveKeys(e);
+  if (REDUCED) {
+    card.style.opacity = 0; card.style.pointerEvents = 'none';
+    deck.style.opacity = 1; dive.t = 1; finishDive(); return;
+  }
+  dive.dir = 1; dive.t0 = performance.now(); dive.tStart = dive.t;
+}
+function finishDive() {
+  dive.dir = 0; deckOn = true; deck.classList.add('on'); deck.setAttribute('aria-hidden', 'false');
+  $('volverBtn').focus({ preventScroll: true });
+  stopLoop(); // the deck covers the table: nothing to draw
+}
+function volver() {
+  if (!deckOn || dive.dir) return;
+  deckOn = false; deck.classList.remove('on'); deck.setAttribute('aria-hidden', 'true');
+  startLoop();
+  if (REDUCED) { deck.style.opacity = 0; card.style.opacity = ''; card.style.pointerEvents = ''; dive.t = 0; return; }
+  dive.dir = -1; dive.t0 = performance.now(); dive.tStart = dive.t;
+}
+function finishReturn() {
+  dive.dir = 0; dive.t = 0;
+  applyCamera(base.pos, base.target, base.fov);
+  card.style.opacity = ''; card.style.pointerEvents = ''; bloomEl.style.opacity = 0; deck.style.opacity = 0;
+  U.uBloom.value = 0;
+  if (dive.el) setDoorPose(ELS.indexOf(dive.el), dive.el, 0);
+  last.door = 999;
+  if (sel) $('enterBtn').focus({ preventScroll: true });
+}
+
+// ---- input ------------------------------------------------------------------------
+const busy = () => dive.dir !== 0 || deckOn;
+canvas.addEventListener('pointermove', (ev) => { if (busy()) return; keyboardFocus = false; setHover(hitAt(ev.clientX, ev.clientY)); });
+canvas.addEventListener('pointerleave', () => { if (!keyboardFocus) setHover(null); });
+canvas.addEventListener('click', (ev) => {
+  if (busy()) return;
+  const e = hitAt(ev.clientX, ev.clientY);
+  if (e) select(e); else closeCard();
+});
+canvas.addEventListener('dblclick', (ev) => { if (busy()) return; const e = hitAt(ev.clientX, ev.clientY); if (e) startDive(e); });
+$('cardClose').addEventListener('click', closeCard);
+$('enterBtn').addEventListener('click', () => startDive(sel));
+$('volverBtn').addEventListener('click', volver);
+
+function moveFocus(dx, dy) {
+  const cur = hover || sel || byPos.get(101);
+  let best = null, bestD = Infinity;
+  for (const e of ELS) {
+    if (dx) { if (e.y !== cur.y || Math.sign(e.x - cur.x) !== dx) continue; const d = Math.abs(e.x - cur.x); if (d < bestD) { bestD = d; best = e; } }
+    else { if (e.x !== cur.x || Math.sign(rowPos(e.y) - rowPos(cur.y)) !== dy) continue; const d = Math.abs(rowPos(e.y) - rowPos(cur.y)); if (d < bestD) { bestD = d; best = e; } }
+  }
+  keyboardFocus = true;
+  setHover(best || cur);
+}
+window.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape') {
+    if (deckOn) { volver(); ev.preventDefault(); return; }
+    if (dive.dir) return;
+    if (sel) { closeCard(); ev.preventDefault(); } else if (hover) { setHover(null); }
+    return;
+  }
+  if (busy()) return;
+  if (ev.key === 'Enter') {
+    if (ev.target && ev.target.tagName === 'BUTTON' && ev.target !== document.body) return; // let the focused button act
+    const target = hover || sel; // arrows move the hover; Enter selects it and dives in one step
+    if (target) startDive(target);
+    ev.preventDefault(); return;
+  }
+  const map = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  if (map[ev.key]) { moveFocus(map[ev.key][0], map[ev.key][1]); ev.preventDefault(); }
+});
+window.addEventListener('resize', () => { fit(); if (!dive.dir && !deckOn) applyCamera(base.pos, base.target, base.fov); });
+
+// ---- loop -------------------------------------------------------------------------
+let raf = 0, running = false, lastNow = 0, time = 0, intro = REDUCED ? 1 : 0;
+const stats = { acc: 0, n: 0, max: 0, wall: 0 };
+function startLoop() { if (running || document.hidden) return; running = true; lastNow = performance.now(); raf = requestAnimationFrame(frame); }
+function stopLoop() { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+function frame(now) {
+  if (!running) return;
+  raf = requestAnimationFrame(frame);
+  const t0 = performance.now();
+  let dt = (now - lastNow) / 1000; lastNow = now;
+  if (!(dt > 0) || dt > 0.1) dt = 0.016;
+  time += dt; U.uTime.value = time;
+  hoverAmt += ((hover ? 1 : 0) - hoverAmt) * Math.min(1, dt * 14); U.uHoverAmt.value = hoverAmt;
+  selAmt += ((sel ? 1 : 0) - selAmt) * Math.min(1, dt * 10); U.uSelAmt.value = selAmt;
+  if (!dive.dir && !deckOn) U.uLift.value = 0.05;
+  if (dive.dir) {
+    dive.t = clamp01(dive.tStart + (dive.dir * (now - dive.t0)) / 1000 / DIVE_S);
+    applyDive(dive.t);
+    if (dive.dir > 0 && dive.t >= 1) finishDive();
+    else if (dive.dir < 0 && dive.t <= 0) finishReturn();
+  } else if (intro < 1) {
+    intro = Math.min(1, intro + dt / 1.6);
+    const k = 1 - Math.pow(1 - intro, 3);
+    dPos.copy(base.pos); dPos.z *= 1 + 0.1 * (1 - k);
+    applyCamera(dPos, base.target, base.fov);
+  }
+  if (hover) placeTip();
+  renderer.render(scene, camera);
+  // frame cost: CPU time of this frame, logged every ~5 s (GPU time is not observable from JS)
+  const cost = performance.now() - t0;
+  stats.acc += cost; stats.n++; stats.max = Math.max(stats.max, cost); stats.wall += dt;
+  if (stats.wall >= 5) {
+    const avg = stats.acc / stats.n, fps = stats.n / stats.wall;
+    const line = `[vitrina] ${fps.toFixed(0)} fps · JS frame ${avg.toFixed(2)} ms avg, ${stats.max.toFixed(1)} ms max · ${renderer.info.render.calls} draw calls · ${renderer.info.render.triangles} tris`;
+    console.log(line); if (SHOW_FPS) fpsEl.textContent = line;
+    stats.acc = 0; stats.n = 0; stats.max = 0; stats.wall = 0;
+  }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopLoop(); else if (!deckOn) startLoop(); });
+
+fit();
+applyCamera(base.pos, base.target, base.fov);
+startLoop();
+requestAnimationFrame(() => canvas.classList.add('in'));
+})();
+</script>

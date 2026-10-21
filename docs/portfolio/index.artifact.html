@@ -1,0 +1,70 @@
+<title>Materia · Portafolio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Outfit:wght@400;600&display=swap">
+<style>
+  /* Layout: one column of three option cards with a decision board below; dark gallery look, single theme by choice. */
+  :root { --bg: #0b0d10; --panel: #13161b; --ink: #f2eee6; --dim: rgba(242,238,230,.62); --line: rgba(255,255,255,.1); --gold: #e8c872; --display: "Fraunces", "Iowan Old Style", Georgia, serif; --body: "Outfit", "Segoe UI", system-ui, sans-serif; color-scheme: dark; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--body); margin: 0; padding-block: 32px 48px; padding-inline: clamp(16px, 5vw, 64px); line-height: 1.45; }
+  main { max-width: 1040px; margin: 0 auto; }
+  h1 { font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1; margin: 0 0 8px; letter-spacing: -0.02em; text-wrap: balance; }
+  .lede { color: var(--dim); max-width: 70ch; margin: 0 0 28px; font-size: 1.05rem; }
+  .eyebrow { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin: 0 0 4px; }
+  .options { display: grid; gap: 16px; }
+  .opt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 20px 22px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); align-items: start; }
+  .opt h2 { font-family: var(--display); font-weight: 500; font-size: 1.6rem; margin: 0 0 6px; }
+  .opt p { margin: 0 0 6px; }
+  .opt .dim { color: var(--dim); }
+  .open { display: inline-block; padding: 10px 18px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 600; text-decoration: none; white-space: nowrap; }
+  .open:hover { background: #fff; }
+  .board { margin-top: 36px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .cell { padding: 16px 18px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
+  .cell h3 { margin: 0 0 6px; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+  .cell p, .cell li { margin: 0; font-size: .95rem; }
+  .cell ul { margin: 0; padding-left: 18px; }
+  kbd { font-family: var(--body); font-size: .8rem; padding: 1px 6px; border: 1px solid var(--line); border-radius: 6px; color: var(--dim); }
+  .foot { margin-top: 32px; color: var(--dim); font-size: .85rem; max-width: 80ch; }
+  @media (max-width: 640px) { .opt { grid-template-columns: 1fr; } }
+</style>
+<main>
+  <p class="eyebrow">Materia · 21 de octubre de 2026</p>
+  <h1>Tres cajas de cristal para la tabla</h1>
+  <p class="lede">Tres prototipos funcionales, hechos a propósito sin pulir del todo, para decidir cómo se ve la tabla como un conjunto de cajas transparentes con átomos vivos, cómo se acerca la cámara sin perder a los vecinos, cómo se abre la puerta y cómo se entra al átomo. Cada uno carga three.js y las fotos reales de Commons; los electrones salen de la configuración real de cada elemento.</p>
+
+  <div class="options">
+    <section class="opt">
+      <div>
+        <p class="eyebrow">Opción A</p>
+        <h2>Vitrina</h2>
+        <p>Una vitrina de museo: cristal con reflejos y brillos de borde, luz cenital suave, un resplandor cálido bajo cada átomo. Átomos de Bohr: núcleo cálido, electrones como cuentas luminosas en anillos inclinados.</p>
+        <p class="dim">Puerta: el panel frontal gira sobre su bisagra izquierda, con un destello al girar. Entrada: a través del panel abierto hacia el núcleo, con un resplandor blanco cálido. 8 llamadas de dibujo; 58 a 60 fps en la prueba.</p>
+      </div>
+      <a class="open" href="https://claude.ai/artifact/JkP9ZaEgtCEk5drtXAmox7" target="_blank" rel="noreferrer">Abrir A ↗</a>
+    </section>
+    <section class="opt">
+      <div>
+        <p class="eyebrow">Opción B</p>
+        <h2>Holograma</h2>
+        <p>Contornos de neón teñidos por familia sobre una rejilla casi negra; las caras aparecen al pasar el cursor. Átomos por capas: cada capa una esfera translúcida con sus electrones deslizándose por la superficie, el núcleo un cúmulo brillante.</p>
+        <p class="dim">Puerta: la cara frontal se disuelve en una cortina de partículas que se abre hacia arriba. Entrada: la cámara atraviesa capa por capa hasta el núcleo, resplandor azul blanco. 7 llamadas de dibujo; 60 fps en la prueba.</p>
+      </div>
+      <a class="open" href="https://claude.ai/artifact/E7iQtK8UpuWjGztpsnUCCj" target="_blank" rel="noreferrer">Abrir B ↗</a>
+    </section>
+    <section class="opt">
+      <div>
+        <p class="eyebrow">Opción C</p>
+        <h2>Caja</h2>
+        <p>Cajas físicas de colección: carcasa mate con profundidad, frente de cristal, placa grabada con el símbolo, apiladas como un muro de especímenes bajo luz cálida de galería. Núcleo como cúmulo de protones y neutrones, electrones como satélites.</p>
+        <p class="dim">Puerta: la tapa de cristal se inclina desde el borde superior como una urna. Entrada: hacia el cúmulo del núcleo, que se aparta para dejar pasar la cámara; resplandor ámbar. 11 llamadas de dibujo, la más pesada (medio millón de triángulos).</p>
+      </div>
+      <a class="open" href="https://claude.ai/artifact/H4chyw5bGi398noUgDSDhH" target="_blank" rel="noreferrer">Abrir C ↗</a>
+    </section>
+  </div>
+
+  <div class="board">
+    <div class="cell"><h3>Cómo probar</h3><ul><li>Pasa el cursor: nombre y electrones reales.</li><li>Toca una caja: la tarjeta aparece del lado contrario al elemento.</li><li><kbd>Entrar</kbd>, <kbd>Enter</kbd> o doble toque: la inmersión.</li><li><kbd>Esc</kbd> o <kbd>Volver</kbd>: todo se deshace.</li><li><kbd>?simple=1</kbd> al final del enlace: modo ligero.</li></ul></div>
+    <div class="cell"><h3>Lo que es común a los tres</h3><ul><li>La tabla ocupa todo el viewport, siempre.</li><li>La tarjeta a la derecha para las columnas 1 a 9, a la izquierda para 10 a 18.</li><li>Los vecinos siguen visibles al acercarse.</li><li>Sin datos inventados: electrones por capa de la configuración real; fotos con su crédito.</li></ul></div>
+    <div class="cell"><h3>Lo que falta en cualquiera</h3><ul><li>Las lentes (familias, estado, luz) pintando las cajas.</li><li>El mazo real en vez de la maqueta.</li><li>Un bloom de verdad (posproceso) en vez de un velo.</li><li>Medición en una laptop con GPU integrada.</li></ul></div>
+    <div class="cell"><h3>Después: los recortes</h3><p>Las fotos de los elementos sin fondo, solo la materia, con <code>rembg</code> al construir y cada recorte bajo la misma licencia que su original. Plan en <code>docs/research/cutouts.md</code>.</p></div>
+  </div>
+
+  <p class="foot">Los prototipos viven en <code>docs/portfolio/</code> del repositorio; las opciones que no se elijan se quedan ahí como referencia. Datos: Bowserinator (CC BY-SA 3.0), fotos de Wikimedia Commons con su licencia por archivo; three.js 0.160 desde cdnjs.</p>
+</main>

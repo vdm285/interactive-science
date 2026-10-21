@@ -9,7 +9,7 @@ His verdict on the round above: the band is rejected (the table must own the vie
 ### Done in response
 
 - **Side card replaces the band** (`src/table/peek.js`, `src/style.css`): the table stays full size; the card slides in on the right for columns 1–9 and on the left for 10–18 (f-block rows by column too), translucent dark glass, hero on top, capsule, pronunciation, doors in two columns, Entrar, a close button; Escape or a click on the table's empty space closes it; clicking another tile swaps the card and flips the side when needed. The old dive stays wired behind Entrar until the portfolio pick replaces it; it is known to be rejected.
-- **Portfolio** (`docs/portfolio/`): `SPEC.md` (shared requirements, the three options), `demo-data.js` (real element data embedded), three prototypes built by parallel sub-agents and reviewed against the spec, published as artifacts (links in the checkpoint message and in `docs/portfolio/README.md`).
+- **Portfolio** (`docs/portfolio/`): `SPEC.md` (shared requirements, the three options), `demo-data.js` (real element data embedded), three prototypes built by parallel sub-agents, reviewed against the spec by adversarial reviewers, fixed, and verified by eye: A Vitrina https://claude.ai/artifact/JkP9ZaEgtCEk5drtXAmox7 · B Holograma https://claude.ai/artifact/E7iQtK8UpuWjGztpsnUCCj · C Caja https://claude.ai/artifact/H4chyw5bGi398noUgDSDhH (table in `docs/portfolio/README.md`).
 - **Cutouts plan**: `docs/research/cutouts.md`.
 
 ### Open until Victor picks
