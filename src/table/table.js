@@ -8,7 +8,8 @@ import { classMap } from 'lit/directives/class-map.js';
 import { state, set, savePrefs } from '../app/store.js';
 import { COPY, LENSES } from '../app/i18n.js';
 import { openPeek, backToTable } from '../app/router.js';
-import { dive } from '../app/transitions.js';
+import { dive, isBusy } from '../app/transitions.js';
+import { use3d, scenePick } from './stage3d.js';
 import { fmt, extent } from '../logic.js';
 import { photoOf, spectrumOf, tileUrl } from '../data/load.js';
 import { stripDataUrl } from '../draw/spectrum.js';
@@ -178,14 +179,53 @@ export function lensesView(s) {
     </div>` : nothing}`;
 }
 
+/** In the 3D table the atom is on screen, so the readout says what it draws: the shells from the data. */
+function shellsLine(e, s) {
+  const c = t();
+  const total = e.shells.reduce((a, b) => a + b, 0);
+  return ` · ${e.shells.join(' · ')} ${c.perShell} · ${fmt(total, s.lang, 0)} e⁻${e.z > 36 ? ` · ${c.drawnCap}` : ''}`;
+}
+
 export function readout(s) {
   const c = t();
   const e = s.hover ? s.byZ.get(s.hover) : null;
   if (!e) return s.view === 'table' ? html`<p class="readout hint">${c.lensHelp[s.lens]}</p>` : nothing;
-  return html`<p class="readout"><strong>${nameOf(e)}</strong> <span class="mono">${e.symbol} · ${e.z}</span> <span class="val">${tileValue(e, s)}</span></p>`;
+  return html`<p class="readout"><strong>${nameOf(e)}</strong> <span class="mono">${e.symbol} · ${e.z}</span> <span class="val">${tileValue(e, s)}${use3d(s) ? shellsLine(e, s) : ''}</span></p>`;
+}
+
+/** The enter pill in the 3D table: the scene places it under the projected box every frame. */
+function enterPill3d(s) {
+  const e = s.view === 'peek' ? s.byZ.get(s.z) : null;
+  if (!e) return nothing;
+  const c = t();
+  return html`<button type="button" class="enter enter-3d" data-z=${e.z} @click=${() => dive(e.z, 'materia')}>${c.enter} ›</button>`;
+}
+
+function pickAt(ev) {
+  return isBusy() ? null : scenePick(ev.clientX, ev.clientY);
+}
+
+/** The glass-box table: the canvas lives in a body-level host (src/table/stage3d.js); this is the pointer layer over it. */
+function stage3d(s) {
+  const c = t();
+  return html`
+    <main class="stage stage-3d" aria-label=${c.appName}
+      @pointermove=${(ev) => { const z = pickAt(ev); if (z !== state.hover) set({ hover: z }); }}
+      @pointerleave=${() => { if (state.hover != null) set({ hover: null }); }}
+      @click=${(ev) => {
+        if (ev.target.closest('.enter')) return;
+        const z = pickAt(ev);
+        if (z) onTile(s.byZ.get(z), s);
+        else if (s.view === 'peek' && !isBusy()) backToTable();
+      }}
+      @dblclick=${(ev) => { const z = pickAt(ev); if (z) dive(z, 'materia'); }}
+    >${enterPill3d(s)}</main>
+    ${readout(s)}
+    ${lensControls(s)}`;
 }
 
 export function tableView(s) {
+  if (use3d(s)) return stage3d(s);
   const c = t();
   const [, maxRadius] = extent(s.elements, radiusOf);
   return html`

@@ -145,7 +145,7 @@ button.chip:hover { color: var(--ink); }
 .lens-pop .picker { padding: 8px 8px 2px; }
 
 /* ─── the side card: the element's world over the table, away from its tile */
-.card-side { position: fixed; top: 10px; bottom: 10px; width: min(34vw, 520px); z-index: 12; display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: rgba(14, 16, 20, 0.88); backdrop-filter: blur(18px) saturate(1.2); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); animation: slide-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.card-side { position: fixed; top: 10px; bottom: 10px; width: min(34vw, 520px); z-index: 12; display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: rgba(14, 16, 20, 0.93); backdrop-filter: blur(18px) saturate(1.2); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); animation: slide-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .card-side.right { right: 10px; --from: 40px; }
 .card-side.left { left: 10px; --from: -40px; }
 @keyframes slide-in { from { opacity: 0; transform: translateX(var(--from)); } }
@@ -173,17 +173,22 @@ button.chip:hover { color: var(--ink); }
 .enter-big:hover { background: #fff; }
 .card-side .hint { margin-top: 6px; }
 
-/* ─── the dive: a face that grows from the tile and swings open */
-.zoomer { position: fixed; z-index: 45; background: #101216 center / cover no-repeat; transform-origin: left center; transition: left 0.62s cubic-bezier(0.3, 0.7, 0.2, 1), top 0.62s cubic-bezier(0.3, 0.7, 0.2, 1), width 0.62s cubic-bezier(0.3, 0.7, 0.2, 1), height 0.62s cubic-bezier(0.3, 0.7, 0.2, 1), border-radius 0.62s, transform 0.72s cubic-bezier(0.6, 0, 0.4, 1), opacity 0.3s; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7); overflow: hidden; }
-.zoomer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.35)); opacity: 0; transition: opacity 0.7s; }
-.zoomer .z { position: absolute; top: 5%; left: 4%; font-size: 1.2rem; opacity: 0.7; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
-.zoomer .sym { position: absolute; left: 4%; bottom: 4%; font-family: var(--display); font-weight: 600; font-size: clamp(2rem, 14vw, 9rem); line-height: 1; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9); }
-.zoomer.full { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0 !important; }
-.zoomer.open { transform: perspective(1400px) rotateY(-108deg); }
-.zoomer.open::after { opacity: 1; }
-.zoomer.instant { transition: none; }
-.zoomer.gone { opacity: 0; }
-body.deep .zoomer { z-index: 45; }
+/* ─── the 3D table: a body-level canvas under the app, the pointer layer over it */
+.gl-stage { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.gl-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.4s ease; }
+.gl-stage canvas.in { opacity: 1; }
+.gl-stage .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse 78% 72% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.42) 100%); }
+.bloom { position: fixed; inset: -25%; z-index: 50; pointer-events: none; opacity: 0; will-change: opacity, transform; background: radial-gradient(circle at 50% 50%, #fff9ee 0%, #ffeccb 22%, #ffe3bd 45%, rgba(255, 226, 190, 0.97) 70%); }
+.stage.stage-3d { inset: 0; bottom: 0; z-index: 1; display: block; padding: 0; cursor: default; touch-action: none; }
+.enter.enter-3d { position: fixed; left: 0; top: 0; z-index: 14; transform: translate(-50%, 0); visibility: hidden; animation: none; }
+.enter.enter-3d.placed { visibility: visible; animation: nudge3d 1.6s ease-in-out 2; }
+@keyframes nudge3d { 50% { transform: translate(-50%, 4px); } }
+.card-side { transition: opacity 0.5s; }
+body.diving .card-side { opacity: 0; pointer-events: none; }
+body.diving .readout, body.diving .control.pill { opacity: 0; transition: opacity 0.3s; }
+
+/* ─── the crossfade: the simple mode's dive and surface, and every dive with animations off */
+.xfade { position: fixed; inset: 0; z-index: 70; background: var(--bg); opacity: 0; pointer-events: none; }
 
 /* ─── deck */
 .deck { position: fixed; inset: 0; z-index: 25; background: var(--bg); }

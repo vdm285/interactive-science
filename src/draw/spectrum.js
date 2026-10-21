@@ -4,10 +4,21 @@
 import { wavelengthToRgb } from '../logic.js';
 
 const cache = new Map();
+const canvases = new Map();
 
 /** Tiny strip for a table tile from the 200 bins, as a data URL (cached per element). */
 export function stripDataUrl(z, bins) {
   if (cache.has(z)) return cache.get(z);
+  const canvas = stripCanvas(z, bins);
+  if (!canvas) return null;
+  const url = canvas.toDataURL('image/png');
+  cache.set(z, url);
+  return url;
+}
+
+/** The same strip as a bins x 1 canvas (cached per element); the 3D back walls draw it into their atlas. */
+export function stripCanvas(z, bins) {
+  if (canvases.has(z)) return canvases.get(z);
   if (!bins) return null;
   const canvas = document.createElement('canvas');
   canvas.width = bins.length;
@@ -24,9 +35,8 @@ export function stripDataUrl(z, bins) {
     img.data[i * 4 + 3] = Math.round(255 * Math.min(1, a * 1.15));
   }
   ctx.putImageData(img, 0, 0);
-  const url = canvas.toDataURL('image/png');
-  cache.set(z, url);
-  return url;
+  canvases.set(z, canvas);
+  return canvas;
 }
 
 /**

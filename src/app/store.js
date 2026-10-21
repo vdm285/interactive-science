@@ -43,6 +43,8 @@ export const state = {
   lang: prefs.lang === 'en' ? 'en' : 'es',   // Spanish first; English is a setting (or a /en in the hash)
   photosOn: prefs.photosOn ?? true,
   motion: prefs.motion ?? !matchMedia('(prefers-reduced-motion: reduce)').matches,
+  quality: ['auto', '3d', 'simple'].includes(prefs.quality) ? prefs.quality : 'auto',   // Calidad: the glass-box table or the CSS grid
+  sceneFallback: null,   // 'slow' when Automática dropped to the simple mode this session, 'error' when three failed to load, 'lost' when the WebGL context went and did not return
   seen: loadJson(SEEN_KEY, {}),
 };
 
@@ -65,8 +67,8 @@ export function set(patch) {
 }
 
 export function savePrefs() {
-  const { lens, property, celsius, year, lang, photosOn, motion } = state;
-  try { localStorage.setItem(PREF_KEY, JSON.stringify({ lens, property, celsius, year, lang, photosOn, motion })); } catch { /* private mode */ }
+  const { lens, property, celsius, year, lang, photosOn, motion, quality } = state;
+  try { localStorage.setItem(PREF_KEY, JSON.stringify({ lens, property, celsius, year, lang, photosOn, motion, quality })); } catch { /* private mode */ }
 }
 
 export function markSeen(z) {

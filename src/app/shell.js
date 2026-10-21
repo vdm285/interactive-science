@@ -7,6 +7,8 @@ import { state, set, savePrefs, forgetSeen } from './store.js';
 import { COPY } from './i18n.js';
 import { searchElements } from '../logic.js';
 import { openElement } from './router.js';
+import { fmt } from '../logic.js';
+import { webglOk, use3d, sceneStats } from '../table/stage3d.js';
 
 const t = () => COPY[state.lang];
 const nameOf = (e) => e.name[state.lang] || e.name.en;
@@ -52,6 +54,19 @@ export function searchView(s) {
   </div>`;
 }
 
+/** The performance line under Calidad: renderer.info numbers while the 3D table runs, else why not. */
+function perfLine(s) {
+  const c = t();
+  if (!webglOk()) return c.noWebgl;
+  if (s.sceneFallback === 'slow') return c.fellBack;
+  if (s.sceneFallback === 'error') return c.sceneError;
+  if (s.sceneFallback === 'lost') return c.sceneLost;
+  if (!use3d(s)) return c.simpleOn;
+  const st = sceneStats();
+  if (!st) return c.perfWarming;
+  return `${c.perf}: ${fmt(st.fps, s.lang, 0)} fps · ${st.calls} ${c.drawCalls} · ${fmt(st.triangles, s.lang, 0)} ${c.triangles} · ${fmt(st.electrons, s.lang, 0)} ${c.electrons} · JS ${fmt(st.jsMs, s.lang, 2)} ms`;
+}
+
 function toggle(key, label, s) {
   return html`<label class="row"><span>${label}</span><input type="checkbox" .checked=${!!s[key]} @change=${(ev) => { set({ [key]: ev.target.checked }); savePrefs(); }}></label>`;
 }
@@ -72,6 +87,11 @@ export function settingsView(s) {
         </span></div>
       ${toggle('photosOn', c.photosOn, s)}
       ${toggle('motion', c.motion, s)}
+      <div class="row"><span>${c.quality}</span>
+        <span class="seg">
+          ${['auto', '3d', 'simple'].map((q) => html`<button type="button" class=${classMap({ on: s.quality === q })} @click=${() => { set({ quality: q, sceneFallback: null }); savePrefs(); }}>${c.qualities[q]}</button>`)}
+        </span></div>
+      <p class="dim small perf">${perfLine(s)}</p>
       <div class="row"><span>${c.seen} <span class="dim">${c.seenCount(seenCount)}</span></span><button type="button" class="ghost" ?disabled=${!seenCount} @click=${forgetSeen}>${c.forget}</button></div>
       <p class="dim small">${c.keys}</p>
       <h3>${c.about}</h3>

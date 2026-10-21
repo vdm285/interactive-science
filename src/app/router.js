@@ -21,6 +21,7 @@ export function parseHash(hash) {
 export function applyHash() {
   const route = parseHash(location.hash);
   const patch = { view: route.view, search: { open: false, q: '', hits: [] }, lightbox: null, lensOpen: false, videoPlaying: null };
+  if (route.view === 'element') patch.settings = false;   // the sheet is not drawn in the deck; an open flag would eat the first Escape
   if (route.lang && route.lang !== state.lang) patch.lang = route.lang;
   if (route.view === 'element') {
     patch.z = route.z;

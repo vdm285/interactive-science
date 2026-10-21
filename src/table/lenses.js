@@ -22,15 +22,20 @@ export const FAMILY_COLOR = {
 const RAMP = [
   [28, 16, 68], [54, 36, 118], [63, 72, 142], [52, 108, 142], [44, 141, 130], [71, 171, 108], [138, 196, 75], [207, 210, 60], [250, 226, 90],
 ];
-export function rampColor(t) {
+/** The ramp as an [r, g, b] triple in 0..255 (the 3D floors read it); null for no value. */
+export function rampRgb(t) {
   if (t == null) return null;
   const x = Math.min(1, Math.max(0, t)) * (RAMP.length - 1);
   const i = Math.floor(x);
   const f = x - i;
   const a = RAMP[i];
   const b = RAMP[Math.min(RAMP.length - 1, i + 1)];
-  const c = a.map((v, k) => Math.round(v + (b[k] - v) * f));
-  return `rgb(${c[0]},${c[1]},${c[2]})`;
+  return a.map((v, k) => Math.round(v + (b[k] - v) * f));
+}
+
+export function rampColor(t) {
+  const c = rampRgb(t);
+  return c ? `rgb(${c[0]},${c[1]},${c[2]})` : null;
 }
 
 export const PROPERTIES = {

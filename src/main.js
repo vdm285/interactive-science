@@ -14,8 +14,9 @@ import { loadCore, loadExtras, loadElementFiles, spectrumOf } from './data/load.
 import { tableView, lensesView } from './table/table.js';
 import { peekView } from './table/peek.js';
 import { searchView, settingsView, openSearch, focusSearchIfPending } from './app/shell.js';
+import { syncScene } from './table/stage3d.js';
 import { deckView, availablePanels, scrollToPanel, wheelToPanels, syncPanelScroll } from './element/deck.js';
-import { dive, surface } from './app/transitions.js';
+import { dive, surface, isBusy } from './app/transitions.js';
 import { drawSpectrum } from './draw/spectrum.js';
 
 const app = document.getElementById('app');
@@ -67,6 +68,7 @@ function afterRender(s) {
     drawnSpectrumFor = null;
     syncPanelScroll(s);
   }
+  syncScene(s);
 }
 
 subscribe((s) => {
@@ -89,11 +91,12 @@ function onKey(ev) {
     if (state.settings) { set({ settings: false }); return; }
     if (state.lensOpen) { set({ lensOpen: false }); return; }
     if (state.search.open) { set({ search: { open: false, q: '', hits: [] } }); return; }
+    if (isBusy()) return;   // a dive or surface in flight owns the view, as it does for the pointer layer
     if (state.view === 'element') { surface(); return; }
     if (state.view === 'peek') { backToTable(); return; }
     return;
   }
-  if (typing) return;
+  if (typing || isBusy()) return;
   if (ev.key === '/' && state.view !== 'element') { ev.preventDefault(); openSearch(); return; }
   if (state.view === 'element') {
     const e = state.byZ.get(state.z);
@@ -131,7 +134,11 @@ function onKey(ev) {
     const dx = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
     const dy = ev.key === 'ArrowDown' ? 1 : ev.key === 'ArrowUp' ? -1 : 0;
     const target = moveOnGrid(from, dx, dy);
-    if (target) { ev.preventDefault(); document.querySelector(`.tile[data-z="${target.z}"]`)?.focus(); }
+    if (target) {
+      ev.preventDefault();
+      const tile = document.querySelector(`.tile[data-z="${target.z}"]`);
+      if (tile) tile.focus(); else set({ hover: target.z });   // the 3D table has no tiles: the hover is the focus
+    }
   }
   if (ev.key === 'Enter' && state.hover && !document.activeElement?.closest('.tile')) openPeek(state.hover);
 }
