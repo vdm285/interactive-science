@@ -9,12 +9,12 @@ import { COPY, PANELS } from '../app/i18n.js';
 import { openElement, openPanel } from '../app/router.js';
 import { surface } from '../app/transitions.js';
 import { spectrumOf, abundanceOf, videoOf } from '../data/load.js';
-import { materia, luz, atomo, nucleo, historia, mundo, imagenes, video, datos, lightbox, galleryItems } from './panels.js';
+import { materia, luz, atomo, nucleo, historia, mundo, imagenes, cosas, video, datos, lightbox, galleryItems, thingsOf } from './panels.js';
 import { FAMILY_COLOR } from '../table/lenses.js';
 
 const t = () => COPY[state.lang];
 const nameOf = (e) => e.name[state.lang] || e.name.en;
-const RENDER = { materia, luz, atomo, nucleo, historia, mundo, imagenes, video, datos };
+const RENDER = { materia, luz, atomo, nucleo, historia, mundo, imagenes, cosas, video, datos };
 
 /** Panels that have something genuine to show for this element. */
 export function availablePanels(e, s) {
@@ -27,6 +27,13 @@ export function availablePanels(e, s) {
     }
     if (p === 'nucleo') return !!s.isotopes;
     if (p === 'video') return !!videoOf(e.z);
+    if (p === 'cosas') {
+      const n = s.thingsIndex?.counts?.[String(e.z)];
+      if (n) return (n.minerals + n.objects) > 0;
+      if (s.thingsIndex) return false;
+      const t = thingsOf(e.z);
+      return t ? (t.minerals.length + t.objects.length) > 0 : true;
+    }
     return true;
   });
 }

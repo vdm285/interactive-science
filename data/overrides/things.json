@@ -1,0 +1,35 @@
+{
+  "_doc": "Curation for tools/build-things.mjs (node tools/build-things.mjs). Keys are atomic numbers as strings; each has minerals and objects, each with include and exclude lists of Wikidata QIDs. include adds an item the automatic routes miss; it still needs a P18 photo with an accepted Commons license and an es or en label, and it skips the sitelink and type filters. exclude drops an item even if the data says it belongs. Say why in a _note next to the change. Re-run the script after editing.",
+  "6": {
+    "minerals": {
+      "include": ["Q24489"],
+      "exclude": [],
+      "_note": "Q24489 coal: a rock, not a mineral, so it has no mineral type and no formula in Wikidata, yet it is the carbon source everyone knows."
+    },
+    "objects": { "include": [], "exclude": [] }
+  },
+  "16": {
+    "minerals": { "include": [], "exclude": [] },
+    "objects": {
+      "include": ["Q12861"],
+      "exclude": [],
+      "_note": "Q12861 gunpowder: reached only through 'has part: sulfur', a route the script limits to non-substances because for carbon it returns every organic compound."
+    }
+  },
+  "29": {
+    "minerals": { "include": [], "exclude": [] },
+    "objects": {
+      "include": [],
+      "exclude": ["Q244475"],
+      "_note": "Q244475 tap dance is 'made from material: brass' in Wikidata (the shoe taps). A dance is not an object."
+    }
+  },
+  "80": {
+    "minerals": { "include": [], "exclude": [] },
+    "objects": {
+      "include": [],
+      "exclude": ["Q116854575"],
+      "_note": "Q116854575 legacy pollution 'has part: mercury'. A pollution type is not an object."
+    }
+  }
+}

@@ -24,6 +24,8 @@ export const state = {
   galleryIndex: null,
   wiki: new Map(),       // z -> wiki/{z}.json
   gallery: new Map(),    // z -> gallery/{z}.json
+  things: new Map(),     // z -> things/{z}.json (minerals and objects)
+  thingsIndex: null,
   // view
   view: 'table',         // 'table' | 'element'
   z: null,               // open element

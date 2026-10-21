@@ -18,6 +18,7 @@ Run everything with `npm run data:all`, or one at a time:
 | `build-history.mjs` | `history` | `history.json` | 150 KB | Wikidata (CC0): P575, P61, P138, P189, sitelinks |
 | `build-abundance.mjs` | `abundance` | `abundance.json` | 60 KB | Wikipedia "Abundances of the elements (data page)" and two sibling pages, quoting CRC, Anders & Grevesse, Croswell and the human-body table; see `docs/research/abundance-sources.md` |
 | `build-gallery.mjs` | `gallery` | `gallery/{z}.json`, `gallery/index.json` | 40 KB each | The ES and EN Wikipedia articles' own media lists; Commons license per file |
+| `build-things.mjs` | `things` | `things/{z}.json`, `things/index.json` | 30 KB each | Wikidata (CC0): minerals by formula (P274) and the "minerals by element" categories; objects made from the element or its alloys (P186, P527, P366, P2283); P18 photos with Commons licenses |
 | `build-videos.mjs` | `videos` | `videos.json` | 60 KB | periodicvideos.com element pages (keyless), each id verified through YouTube oEmbed; embedded with the nocookie player |
 
 ## Elements
@@ -53,6 +54,10 @@ One figure per element per medium: crust (CRC Handbook, mg/kg), sea water (CRC, 
 ## Gallery
 
 `https://{es,en}.wikipedia.org/api/rest_v1/page/media-list/{title}`, merged by file title with the Spanish caption first. Filtered out: non-images, SVG and GIF, icons and logos, periodic-table overviews, electron-shell diagrams, the NFPA diamond, anything under 400 px wide, and any file whose Commons license fails `licenseOk`. At most 24 per element, the Spanish article's first image first. Each item: file, `thumb` (500 px) and `src` (1280 px) URLs, dimensions, captions, artist, license, license URL, Commons page. `data/overrides/gallery.json` can exclude, include or pin the first image.
+
+## Things (minerals and objects)
+
+`tools/build-things.mjs`. Minerals: one fetch of every Wikidata item typed mineral species, variety, series or group with a formula (5,745 items), matched locally by the element symbol in the formula (superscripts and valences stripped), plus the members of the English `Category:<Element> minerals` and the Spanish `Categoría:Minerales de <alias>` joined to Wikidata, which is the only way to get rocks and mixtures without a formula (bauxite, limonite, wolframite). Objects: items "made from" the element (P186), its uses (P366, P2283), its alloys (`P279+` alloy) and objects made of those alloys, and "has part" (P527) restricted to artificial objects and ores; every class must sit under artificial object, product, material, alloy, ore or award, and at most four single instances (statues, bridges, coins, artefacts) follow the generic classes. Everything is ranked by Wikipedia sitelink count and capped at 12; each photo is the first free raster P18 (checked with `commonsInfo`). Coverage on 2026-10-21: 739 minerals for 72 elements, 197 objects for 40; 174 items have no Spanish label in Wikidata and fall back to English. The formula route is literal (carbon lists carbonates after diamond and graphite). Known limit: Wikidata's "made from" coverage is thin, so famous things (thermometer, light bulb, neon sign, table salt) must be added by QID in `data/overrides/things.json`, which also excludes oddities (tap dance "made from brass"). Research and the rejected routes: `docs/research/things-sources.md`. Never pull from Mindat or webmineral (copyrighted databases).
 
 ## Videos
 

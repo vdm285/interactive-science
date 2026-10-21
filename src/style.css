@@ -328,6 +328,15 @@ body.deep .zoomer { z-index: 45; }
 .lightbox .next { right: 14px; }
 .lightbox .x { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; font-size: 1.6rem; }
 
+/* Cosas */
+.things { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 22px; }
+.thing { display: grid; grid-template-rows: 110px auto; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); text-decoration: none; color: var(--ink); transition: transform 0.18s, border-color 0.18s; }
+.thing:hover { transform: translateY(-2px); border-color: var(--swatch); }
+.thing img { width: 100%; height: 110px; object-fit: cover; display: block; }
+.thing-blank { display: grid; place-items: center; height: 110px; font-size: 2rem; color: var(--ink-faint); }
+.thing-name { padding: 7px 10px 9px; font-size: 0.9rem; line-height: 1.25; }
+.thing-name::first-letter { text-transform: uppercase; }
+
 /* Video */
 .player { position: relative; width: min(100%, 1100px); aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #000; }
 .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }

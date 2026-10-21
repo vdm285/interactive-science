@@ -31,6 +31,7 @@ export function loadExtras() {
   json('videos.json').then((videos) => set({ videos }));
   json('wiki/index.json').then((wikiIndex) => set({ wikiIndex }));
   json('gallery/index.json').then((galleryIndex) => set({ galleryIndex }));
+  json('things/index.json').then((thingsIndex) => set({ thingsIndex }));
 }
 
 const pending = new Set();
@@ -42,6 +43,14 @@ export function loadElementFiles(z) {
       state.wiki.set(z, data);
       pending.delete(`w${z}`);
       set({ wikiTick: (state.wikiTick || 0) + 1 });
+    });
+  }
+  if (!state.things.has(z) && !pending.has(`t${z}`)) {
+    pending.add(`t${z}`);
+    json(`things/${z}.json`).then((data) => {
+      state.things.set(z, data);
+      pending.delete(`t${z}`);
+      set({ thingsTick: (state.thingsTick || 0) + 1 });
     });
   }
   if (!state.gallery.has(z) && !pending.has(`g${z}`)) {

@@ -25,7 +25,9 @@ Victor's answers to the checkpoint cards: name **Materia**; the table must stay 
 
 - Every element photograph was reviewed at 500 px by a sub-agent; 17 weak picks replaced through `data/overrides/photos.json` (liquid oxygen, refined sulfur, grown platinum, a clear mercury pour, the Hi-Res Images set for seven lanthanides and arsenic, a DOE uranium billet, and so on), each with a `_notes` line. Seven transuranic pictures stay low-resolution because Commons has nothing better; the notes say so.
 - Periodic Videos: 118 of 118 episodes, keyless, verified through oEmbed; a Video panel and a door.
-- Minerals, ores and everyday objects: research and pipeline in progress (`tools/build-things.mjs`, `docs/research/things-sources.md`); see the next section when it lands.
+- Galleries curated through `data/overrides/gallery.json` from the pipeline's own curation list: 68 images excluded (namesake planets and gods, price charts, trains and towers, mushroom clouds, burned hands, a gas attack), first images set for Cf, Md, Lr; Db and Ds end with no gallery and lose the door.
+- **Cosas** panel (`cosas` in `src/element/panels.js`, data `public/data/things/{z}.json` from `tools/build-things.mjs`): minerals and ores whose formula carries the element (Wikidata P274 plus the "minerals by element" categories), and objects made from it or its alloys (P186, P527, P366), each with a Commons photo, Spanish and English labels, the formula and a link to Wikipedia. Research and coverage in `docs/research/things-sources.md`; curation in `data/overrides/things.json`.
+- Wikipedia extracts are now the whole lead section (MediaWiki extracts API), not the first paragraph.
 
 ### Audit log for this round
 

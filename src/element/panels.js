@@ -280,6 +280,33 @@ export function lightbox(e, s) {
   </div>`;
 }
 
+// ───────────────────────────── Cosas (minerals and objects from Wikidata, photos from Commons)
+export function thingsOf(z) {
+  const t = state.things.get(z);
+  return t && (t.minerals || t.objects) ? { minerals: t.minerals || [], objects: t.objects || [] } : null;
+}
+
+function thingCard(it, s, kind) {
+  const name = it[s.lang] || it.en || it.es;
+  const wiki = it.wiki?.[s.lang] || it.wiki?.es || it.wiki?.en;
+  const href = wiki ? `https://${it.wiki?.[s.lang] ? s.lang : (it.wiki?.es ? 'es' : 'en')}.wikipedia.org/wiki/${encodeURIComponent(wiki.replace(/ /g, '_'))}` : `https://www.wikidata.org/wiki/${it.qid}`;
+  return html`<a class="thing" href=${href} target="_blank" rel="noreferrer" title=${it.photo ? `${it.photo.artist || 'Wikimedia Commons'} · ${it.photo.license}` : name}>
+    ${it.photo ? html`<img src=${it.photo.thumb} alt=${name} loading="lazy" decoding="async">` : html`<span class="thing-blank">${kind === 'mineral' ? '◇' : '•'}</span>`}
+    <span class="thing-name">${name}${it.formula ? html` <span class="mono dim">${it.formula}</span>` : nothing}</span>
+  </a>`;
+}
+
+export function cosas(e, s) {
+  const c = t();
+  const th = thingsOf(e.z);
+  if (!th) return html`<section class="panel cosas"><p class="empty">${s.things.has(e.z) ? c.noValue : '…'}</p></section>`;
+  return html`<section class="panel cosas">
+    ${th.minerals.length ? html`<h2>${c.minerals}</h2><div class="things">${th.minerals.map((it) => thingCard(it, s, 'mineral'))}</div>` : nothing}
+    ${th.objects.length ? html`<h2>${c.objects}</h2><div class="things">${th.objects.map((it) => thingCard(it, s, 'object'))}</div>` : nothing}
+    <p class="src">${c.thingsNote} <a href=${`https://www.wikidata.org/wiki/${historyOf(e.z)?.wikidata || ''}`} target="_blank" rel="noreferrer">Wikidata</a></p>
+  </section>`;
+}
+
 // ───────────────────────────── Video (Periodic Videos, embedded on tap)
 export function video(e, s) {
   const c = t();

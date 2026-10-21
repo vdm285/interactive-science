@@ -11,7 +11,7 @@ import { atomSvg } from '../draw/atom.js';
 import { stripDataUrl } from '../draw/spectrum.js';
 import { FAMILY_COLOR, discoveryYear } from './lenses.js';
 import { availablePanels } from '../element/deck.js';
-import { galleryItems } from '../element/panels.js';
+import { galleryItems, thingsOf } from '../element/panels.js';
 import { dive } from '../app/transitions.js';
 
 const t = () => COPY[state.lang];
@@ -47,6 +47,13 @@ function doorBody(p, e, s) {
       const items = galleryItems(e.z);
       const n = s.galleryIndex?.elements?.[String(e.z)] ?? s.galleryIndex?.[String(e.z)] ?? items.length;
       return html`${items[0] ? html`<img src=${items[0].thumb} alt="" loading="lazy">` : nothing}<small>${n || ''}</small>`;
+    }
+    case 'cosas': {
+      const th = thingsOf(e.z);
+      const n = s.thingsIndex?.counts?.[String(e.z)];
+      const first = th?.minerals.find((m) => m.photo) || th?.objects.find((o) => o.photo);
+      const label = n ? `${n.minerals} ${c.minerals.split(' ')[0].toLowerCase()} · ${n.objects} ${c.objects.split(' ')[0].toLowerCase()}` : '';
+      return html`${first ? html`<img src=${first.photo.thumb} alt="" loading="lazy">` : nothing}<small>${label}</small>`;
     }
     case 'video': {
       const v = videoOf(e.z);

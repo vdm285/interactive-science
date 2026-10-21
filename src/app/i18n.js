@@ -42,7 +42,8 @@ export const COPY = {
       year: ['Año de descubrimiento', ''],
     },
     noValue: 'sin dato',
-    panels: { materia: 'Materia', luz: 'Luz', atomo: 'Átomo', nucleo: 'Núcleo', historia: 'Historia', mundo: 'Mundo', imagenes: 'Imágenes', video: 'Video', datos: 'Datos' },
+    panels: { materia: 'Materia', luz: 'Luz', atomo: 'Átomo', nucleo: 'Núcleo', historia: 'Historia', mundo: 'Mundo', imagenes: 'Imágenes', cosas: 'Cosas', video: 'Video', datos: 'Datos' },
+    minerals: 'Minerales y menas', objects: 'Objetos y usos', thingsNote: 'Minerales cuya fórmula lleva el elemento y objetos hechos con él, según Wikidata (CC0); cada foto lleva su licencia de Commons. Lo que Wikidata no tiene, no aparece.',
     videoTitle: 'El episodio de Periodic Videos', videoPlay: 'Ver el video', videoNote: 'Se reproduce desde YouTube (reproductor sin cookies) al tocar; el video pertenece a su canal, no se descarga ni se aloja aquí.', videoBy: 'Universidad de Nottingham y Brady Haran, en inglés',
     // Materia
     protons: 'protones', mass: 'masa', read: 'Leer', readLess: 'Cerrar texto', wiki: 'Wikipedia en español', wikiEn: 'Wikipedia en inglés', ccBySa: 'CC BY-SA 4.0',
@@ -132,7 +133,8 @@ export const COPY = {
       year: ['Year of discovery', ''],
     },
     noValue: 'no data',
-    panels: { materia: 'Matter', luz: 'Light', atomo: 'Atom', nucleo: 'Nucleus', historia: 'History', mundo: 'World', imagenes: 'Images', video: 'Video', datos: 'Data' },
+    panels: { materia: 'Matter', luz: 'Light', atomo: 'Atom', nucleo: 'Nucleus', historia: 'History', mundo: 'World', imagenes: 'Images', cosas: 'Things', video: 'Video', datos: 'Data' },
+    minerals: 'Minerals and ores', objects: 'Objects and uses', thingsNote: 'Minerals whose formula carries the element and objects made from it, per Wikidata (CC0); every photo carries its Commons license. What Wikidata lacks is absent.',
     videoTitle: 'The Periodic Videos episode', videoPlay: 'Play the video', videoNote: 'Plays from YouTube (privacy-enhanced player) when tapped; the video belongs to its channel and is neither downloaded nor hosted here.', videoBy: 'University of Nottingham and Brady Haran',
     protons: 'protons', mass: 'mass', read: 'Read', readLess: 'Close text', wiki: 'Wikipedia in English', wikiEn: 'Wikipedia in Spanish', ccBySa: 'CC BY-SA 4.0',
     noPhoto: 'Wikimedia Commons has no photograph of this element.',
@@ -174,5 +176,5 @@ export const COPY = {
   },
 };
 
-export const PANELS = ['materia', 'luz', 'atomo', 'nucleo', 'historia', 'mundo', 'imagenes', 'video', 'datos'];
+export const PANELS = ['materia', 'luz', 'atomo', 'nucleo', 'historia', 'mundo', 'cosas', 'imagenes', 'video', 'datos'];
 export const LENSES = ['fotos', 'familias', 'estado', 'historia', 'luz', 'tamano', 'datos'];
