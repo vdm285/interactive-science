@@ -170,7 +170,7 @@ export function historia(e, s) {
   const year = discoveryYear(e);
   const lo = 1660, hi = 2030;
   const ancient = e.ancient || (year != null && year < lo);
-  const person = (p) => html`<span class="person"><strong>${p[s.lang] || p.en || p.es || p.qid}</strong>${p.description?.[s.lang] ? html` <span class="dim">· ${p.description[s.lang]}</span>` : nothing}</span>`;
+  const person = (p, i, arr) => html`<span class="person"><strong>${p[s.lang] || p.en || p.es || p.qid}</strong>${p.description?.[s.lang] ? html` <span class="dim small">(${p.description[s.lang]})</span>` : nothing}${i < arr.length - 2 ? ', ' : i === arr.length - 2 ? (s.lang === 'es' ? ' y ' : ' and ') : ''}</span>`;
   // Timeline: one dot per element with a year, stacked when they share a 4-year bin.
   const bins = new Map();
   const dots = [];
