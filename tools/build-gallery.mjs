@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ES } from './names.mjs';
 import { getJsonCached, commonsInfo, licenseOk, commonsThumb, writeJsonCapped, root, today, stripHtml } from './net.mjs';
-import { ES_TITLES, esTitleCandidates } from './build-wiki.mjs';
+import { ES_TITLES, esTitleCandidates, loadEnglishNames } from './wiki-titles.mjs';
 
 const OUT = join(root, 'public/data/gallery');
 const PER_FILE_CAP = 40 * 1024;
@@ -61,18 +61,6 @@ async function resolvedTitles(z, enName) {
   }
 }
 
-async function loadEnglishNames() {
-  for (const rel of ['public/data/elements.json']) {
-    try {
-      const data = JSON.parse(await readFile(join(root, rel), 'utf8'));
-      const list = Array.isArray(data) ? data : data.elements;
-      const out = {};
-      for (const e of list) out[e.z] = e.name?.en || e.name;
-      if (Object.keys(out).length === 118) return out;
-    } catch { /* next */ }
-  }
-  throw new Error('No elements file with English names found');
-}
 
 async function loadOverrides() {
   try {
