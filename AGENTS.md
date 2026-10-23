@@ -21,6 +21,7 @@ A static periodic table on GitHub Pages, media first, in three layers. The **tab
 - Let the table disappear. The band in the peek and the medallion in the deck are the universe kept on screen (Victor's rule, 2026-10-21).
 - Give the body a class that any layout rule also uses (`.peek` is the peek layer; the body gets `peeking`).
 - Put caches or downloads on C:. `data/cache/` is on D: and gitignored.
+- Let `public/sw.js` delete a cache or an entry it does not own: Cache Storage belongs to the origin `vdm285.github.io`, shared with the owner's other apps (HANDOFF, 2026-10-22).
 
 ## Where things live
 
